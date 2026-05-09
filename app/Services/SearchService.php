@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\Chambre;
 use App\Models\Reservation;
+use App\Models\Service;
+use App\Models\Vehicule;
+use App\Models\Media;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -96,7 +99,13 @@ class SearchService
      */
     public function getDynamicPrice(Chambre $chambre, Carbon $date)
     {
-        // ... (existing logic)
+        // On récupère les tarifs spéciaux pour cette date
+        $tarifSpecial = $chambre->tarifs()
+            ->where('date_debut', '<=', $date)
+            ->where('date_fin', '>=', $date)
+            ->first();
+
+        return $tarifSpecial ? $tarifSpecial->prix : $chambre->prix_base;
     }
 
     /**
@@ -109,8 +118,8 @@ class SearchService
         $results = [];
 
         // 1. Rechercher dans les Appartements/Chambres
-        $chambres = Chambre::with(['typeChambre', 'propriete'])
-            ->where('nom', 'LIKE', "%$term%")
+        $chambres = Chambre::with(['typeChambre', 'propriete', 'medias'])
+            ->where('numero_chambre', 'LIKE', "%$term%")
             ->orWhereHas('typeChambre', function($q) use ($term) {
                 $q->where('nom', 'LIKE', "%$term%");
             })
@@ -121,57 +130,65 @@ class SearchService
             ->limit(5)
             ->get()
             ->map(function($item) {
+                $image = $item->medias->first()?->chemin_fichier;
+                if ($image && !str_starts_with($image, 'http')) {
+                    $image = asset('storage/' . $image);
+                }
                 return [
                     'type' => 'appartement',
                     'id' => $item->id,
-                    'title' => $item->nom,
-                    'subtitle' => $item->propriete->nom . ' - ' . $item->typeChambre->nom,
-                    'image' => $item->image_url, // Assurez-vous que cet attribut existe
+                    'title' => 'Chambre ' . $item->numero_chambre,
+                    'subtitle' => ($item->propriete?->nom ?? '') . ' - ' . ($item->typeChambre?->nom ?? ''),
+                    'image' => $image,
                 ];
             });
         
         $results = array_merge($results, $chambres->toArray());
 
         // 2. Rechercher dans les Services
-        $services = \App\Models\Service::where('nom', 'LIKE', "%$term%")
+        $services = Service::where('nom', 'LIKE', "%$term%")
             ->orWhere('description', 'LIKE', "%$term%")
             ->limit(5)
             ->get()
             ->map(function($item) {
+                // Pour les services, on cherche dans la table medias
+                $image = Media::where('type_reference', 'service')->where('id_reference', $item->id)->first()?->chemin_fichier;
+                if ($image && !str_starts_with($image, 'http')) {
+                    $image = asset('storage/' . $image);
+                }
                 return [
                     'type' => 'service',
                     'id' => $item->id,
                     'title' => $item->nom,
                     'subtitle' => number_format($item->prix, 0, ',', ' ') . ' FCFA',
-                    'image' => $item->image_url,
+                    'image' => $image,
                 ];
             });
 
         $results = array_merge($results, $services->toArray());
 
         // 3. Rechercher dans les Véhicules
-        $vehicules = \App\Models\Vehicule::where('marque', 'LIKE', "%$term%")
+        $vehicules = Vehicule::with(['primaryImage'])
+            ->where('marque', 'LIKE', "%$term%")
             ->orWhere('modele', 'LIKE', "%$term%")
             ->limit(5)
             ->get()
             ->map(function($item) {
+                $image = $item->primaryImage?->chemin_image;
+                if ($image && !str_starts_with($image, 'http')) {
+                    $image = asset('storage/' . $image);
+                }
                 return [
                     'type' => 'vehicule',
                     'id' => $item->id,
                     'title' => $item->marque . ' ' . $item->modele,
                     'subtitle' => number_format($item->prix_journalier, 0, ',', ' ') . ' FCFA / jour',
-                    'image' => $item->image_url,
+                    'image' => $image,
                 ];
             });
 
         $results = array_merge($results, $vehicules->toArray());
 
         return $results;
-    }
-}        ->where('date_debut', '<=', $date)
-            ->where('date_fin', '>=', $date)
-            ->first();
-
-        return $tarifSpecial ? $tarifSpecial->prix : $chambre->prix_base;
     }
 }

@@ -47,6 +47,9 @@ Route::prefix('client')->group(function () {
     Route::get('/vehicules', [VehiculeController::class, 'index']);
     Route::get('/vehicules/{id}', [VehiculeController::class, 'show']);
 
+    // Global Search (Public)
+    Route::get('/search/instant', [\App\Http\Controllers\Api\Client\GlobalSearchController::class, 'instant']);
+
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
@@ -57,9 +60,6 @@ Route::prefix('client')->group(function () {
         Route::get('/visites', [VisiteController::class, 'index']);
         Route::get('/visites/{id}', [VisiteController::class, 'show']);
         
-        // Global Search
-        Route::get('/search/instant', [\App\Http\Controllers\Api\Client\GlobalSearchController::class, 'instant']);
-
         // Favoris
         Route::get('/favoris', [FavorisController::class, 'index']);
         Route::post('/favoris/{chambre}/toggle', [FavorisController::class, 'toggle']);
