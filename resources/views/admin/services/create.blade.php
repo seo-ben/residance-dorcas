@@ -1,0 +1,82 @@
+@extends('layouts.playout')
+
+@section('content')
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow p-8">
+        <div class="flex items-center mb-8">
+            <a href="{{ route('admin.services.index') }}" class="mr-4 text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-800">Ajouter un nouveau service</h1>
+        </div>
+
+        <form action="{{ route('admin.services.store') }}" method="POST" class="space-y-6">
+            @csrf
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom du service*</label>
+                    <input type="text" name="nom" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500" placeholder="Ex: Petit-déjeuner continental">
+                </div>
+
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA)*</label>
+                    <input type="number" name="prix" required min="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500" placeholder="0">
+                </div>
+
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500" placeholder="Décrivez le service proposé..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Disponibilité</label>
+                    <select name="disponibilite" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                        <option value="24h">24h/24</option>
+                        <option value="jour">En journée</option>
+                        <option value="horaires_specifiques">Horaires spécifiques</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                    <select name="statut" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                        <option value="actif">Actif</option>
+                        <option value="inactif">Inactif</option>
+                    </select>
+                </div>
+
+                <div class="horaires hidden grid grid-cols-2 gap-4 col-span-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Début (Heure)</label>
+                        <input type="time" name="horaires_debut" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fin (Heure)</label>
+                        <input type="time" name="horaires_fin" class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded-md font-bold hover:bg-red-700 transition duration-300">
+                    Enregistrer le service
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const dispoSelect = document.querySelector('select[name="disponibilite"]');
+    const horairesDiv = document.querySelector('.horaires');
+    
+    dispoSelect.addEventListener('change', function() {
+        if (this.value === 'horaires_specifiques') {
+            horairesDiv.classList.remove('hidden');
+        } else {
+            horairesDiv.classList.add('hidden');
+        }
+    });
+</script>
+@endsection
