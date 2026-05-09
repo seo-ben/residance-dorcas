@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('client')->group(function () {
     // Auth
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login/google', [AuthController::class, 'loginWithGoogle']);
     Route::post('/register', [AuthController::class, 'register']);
 
     // Public routes (or filtered)
@@ -56,6 +57,10 @@ Route::prefix('client')->group(function () {
         Route::get('/visites', [VisiteController::class, 'index']);
         Route::get('/visites/{id}', [VisiteController::class, 'show']);
         
+        // Global Search
+        Route::get('/search/instant', [\App\Http\Controllers\Api\Client\GlobalSearchController::class, 'instant']);
+
+        // Favoris
         Route::get('/favoris', [FavorisController::class, 'index']);
         Route::post('/favoris/{chambre}/toggle', [FavorisController::class, 'toggle']);
         

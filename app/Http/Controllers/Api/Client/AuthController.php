@@ -121,6 +121,53 @@ class AuthController extends Controller
     /**
      * Récupérer les infos de l'utilisateur connecté
      */
+    /**
+     * Connexion via Google (Mobile API)
+     */
+    public function loginWithGoogle(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'google_id' => 'required',
+            'name' => 'required',
+            'device_name' => 'required',
+        ]);
+
+        $user = User::where('google_id', $request->google_id)
+                    ->orWhere('email', $request->email)
+                    ->first();
+
+        if ($user) {
+            // Update google_id if not set
+            if (!$user->google_id) {
+                $user->update(['google_id' => $request->google_id]);
+            }
+        } else {
+            // Create new user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'google_id' => $request->google_id,
+                'password' => Hash::make(str_random(16)),
+                'type_utilisateur' => 'client',
+                'statut' => 'actif',
+            ]);
+
+            Client::create([
+                'id_utilisateur' => $user->id,
+                'points_fidelite' => 0,
+            ]);
+        }
+
+        $token = $user->createToken($request->device_name)->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'user' => $user->load('client'),
+        ]);
+    }
+
     public function me(Request $request)
     {
         return response()->json([

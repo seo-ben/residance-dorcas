@@ -49,7 +49,7 @@ class LoginWithGoogleController extends Controller
                     return redirect()->route('admin.dashboard');
                 }
                 
-                return redirect()->intended('dashboard');
+                return redirect()->intended('/');
             } else {
                 // Create a new user
                 $newUser = User::create([
@@ -69,7 +69,7 @@ class LoginWithGoogleController extends Controller
                     return redirect()->route('admin.dashboard');
                 }
                 
-                return redirect()->intended('dashboard');
+                return redirect()->intended('/');
             }
 
         } catch (Exception $e) {

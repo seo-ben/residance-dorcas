@@ -96,9 +96,79 @@ class SearchService
      */
     public function getDynamicPrice(Chambre $chambre, Carbon $date)
     {
-        // On récupère les tarifs spéciaux pour cette date
-        $tarifSpecial = $chambre->tarifs()
-            ->where('date_debut', '<=', $date)
+        // ... (existing logic)
+    }
+
+    /**
+     * Recherche globale instantanée pour le mobile
+     */
+    public function globalSearch($term)
+    {
+        if (empty($term)) return [];
+
+        $results = [];
+
+        // 1. Rechercher dans les Appartements/Chambres
+        $chambres = Chambre::with(['typeChambre', 'propriete'])
+            ->where('nom', 'LIKE', "%$term%")
+            ->orWhereHas('typeChambre', function($q) use ($term) {
+                $q->where('nom', 'LIKE', "%$term%");
+            })
+            ->orWhereHas('propriete', function($q) use ($term) {
+                $q->where('nom', 'LIKE', "%$term%")
+                  ->orWhere('adresse', 'LIKE', "%$term%");
+            })
+            ->limit(5)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'type' => 'appartement',
+                    'id' => $item->id,
+                    'title' => $item->nom,
+                    'subtitle' => $item->propriete->nom . ' - ' . $item->typeChambre->nom,
+                    'image' => $item->image_url, // Assurez-vous que cet attribut existe
+                ];
+            });
+        
+        $results = array_merge($results, $chambres->toArray());
+
+        // 2. Rechercher dans les Services
+        $services = \App\Models\Service::where('nom', 'LIKE', "%$term%")
+            ->orWhere('description', 'LIKE', "%$term%")
+            ->limit(5)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'type' => 'service',
+                    'id' => $item->id,
+                    'title' => $item->nom,
+                    'subtitle' => number_format($item->prix, 0, ',', ' ') . ' FCFA',
+                    'image' => $item->image_url,
+                ];
+            });
+
+        $results = array_merge($results, $services->toArray());
+
+        // 3. Rechercher dans les Véhicules
+        $vehicules = \App\Models\Vehicule::where('marque', 'LIKE', "%$term%")
+            ->orWhere('modele', 'LIKE', "%$term%")
+            ->limit(5)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'type' => 'vehicule',
+                    'id' => $item->id,
+                    'title' => $item->marque . ' ' . $item->modele,
+                    'subtitle' => number_format($item->prix_journalier, 0, ',', ' ') . ' FCFA / jour',
+                    'image' => $item->image_url,
+                ];
+            });
+
+        $results = array_merge($results, $vehicules->toArray());
+
+        return $results;
+    }
+}        ->where('date_debut', '<=', $date)
             ->where('date_fin', '>=', $date)
             ->first();
 
