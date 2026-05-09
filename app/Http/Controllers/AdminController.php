@@ -21,6 +21,7 @@ class AdminController extends Controller
      */
     public function index()
     {
+        
         $stats = [
             'total_reservations' => Reservation::count(),
             'reservations_en_cours' => Reservation::where('statut', 'confirmee')->count(),
