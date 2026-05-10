@@ -19,7 +19,7 @@ class VisitProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get(ApiConfig.visites);
+      final response = await _apiService.get("${ApiConfig.visites}/mes-visites");
       if (response.statusCode == 200) {
         _visits = response.data['data'];
       }

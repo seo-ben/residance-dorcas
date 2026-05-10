@@ -20,9 +20,12 @@ class VehiculeController extends Controller
     public function indexLocations()
     {
         $user = Auth::user();
-        $client = $user->client;
+        
+        // Trouver tous les IDs de clients liés à cet utilisateur
+        // Cela gère les doublons potentiels dans la table 'clients'
+        $clientIds = Client::where('id_utilisateur', $user->id)->pluck('id');
 
-        if (!$client) {
+        if ($clientIds->isEmpty()) {
             return response()->json([
                 'success' => true,
                 'data' => []
@@ -30,7 +33,7 @@ class VehiculeController extends Controller
         }
 
         $locations = LocationVehicule::with(['vehicule.primaryImage', 'reservation'])
-            ->where('id_client', $client->id)
+            ->whereIn('id_client', $clientIds)
             ->orderBy('created_at', 'desc')
             ->get();
 

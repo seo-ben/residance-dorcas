@@ -5,7 +5,7 @@ import '../config/api_config.dart';
 
 class ServiceProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
-  
+
   List<ServiceModel> _services = [];
   List<dynamic> _userOrders = [];
   bool _isLoading = false;
@@ -16,11 +16,13 @@ class ServiceProvider with ChangeNotifier {
 
   Future<void> fetchUserOrders() async {
     _isLoading = true;
-    _userOrders = []; // On vide avant de charger
+    _userOrders = [];
     notifyListeners();
 
     try {
-      final response = await _apiService.get("${ApiConfig.services}/mes-commandes");
+      final response = await _apiService.get(
+        "${ApiConfig.services}/mes-commandes",
+      );
       if (response.statusCode == 200) {
         _userOrders = response.data['data'];
       }
@@ -50,15 +52,24 @@ class ServiceProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> orderService(int serviceId, int quantity, String date, String time, String? notes) async {
+  Future<bool> orderService(
+    int serviceId,
+    int quantity,
+    String date,
+    String time,
+    String? notes,
+  ) async {
     try {
-      final response = await _apiService.post("${ApiConfig.services}/commander", data: {
-        'id_service': serviceId,
-        'quantite': quantity,
-        'date_service': date,
-        'heure_service': time,
-        'notes': notes,
-      });
+      final response = await _apiService.post(
+        "${ApiConfig.services}/commander",
+        data: {
+          'id_service': serviceId,
+          'quantite': quantity,
+          'date_service': date,
+          'heure_service': time,
+          'notes': notes,
+        },
+      );
       return response.statusCode == 200;
     } catch (e) {
       return false;

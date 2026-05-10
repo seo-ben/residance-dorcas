@@ -16,6 +16,7 @@ class VehicleProvider with ChangeNotifier {
 
   Future<void> fetchUserRentals() async {
     _isLoading = true;
+    _userRentals = [];
     notifyListeners();
 
     try {

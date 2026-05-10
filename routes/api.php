@@ -61,7 +61,7 @@ Route::prefix('client')->group(function () {
         Route::get('/vehicules/mes-locations', [VehiculeController::class, 'indexLocations']);
         Route::post('/vehicules/louer', [VehiculeController::class, 'book']);
         
-        Route::get('/visites', [VisiteController::class, 'index']);
+        Route::get('/visites/mes-visites', [VisiteController::class, 'index']);
         Route::get('/visites/{id}', [VisiteController::class, 'show']);
         Route::post('/visites', [VisiteController::class, 'store']);
         
