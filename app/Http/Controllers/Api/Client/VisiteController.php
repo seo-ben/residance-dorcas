@@ -16,6 +16,7 @@ class VisiteController extends Controller
      */
     public function index()
     {
+        
         $client = Client::where('id_utilisateur', Auth::id())->firstOrFail();
         
         $demandes = DemandeVisite::with([
