@@ -77,6 +77,11 @@ class Reservation extends Model
         return $this->hasMany(Avi::class, 'id_reservation');
     }
 
+    public function locationVehicule(): HasOne
+    {
+        return $this->hasOne(LocationVehicule::class, 'id_reservation');
+    }
+
     // Accesseurs pour les dates formatées
     public function getDateArriveeFormatAttribute()
     {

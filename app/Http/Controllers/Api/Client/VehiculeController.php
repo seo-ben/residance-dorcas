@@ -21,24 +21,50 @@ class VehiculeController extends Controller
     {
         $user = Auth::user();
         
-        // Trouver tous les IDs de clients liés à cet utilisateur
-        // Cela gère les doublons potentiels dans la table 'clients'
-        $clientIds = Client::where('id_utilisateur', $user->id)->pluck('id');
+        // 1. Récupérer les IDs de clients liés par id_utilisateur
+        $clientIds = Client::where('id_utilisateur', $user->id)->pluck('id')->toArray();
 
-        if ($clientIds->isEmpty()) {
+        // 2. Fallback: Chercher par email si nécessaire
+        $clientByEmail = Client::whereHas('user', function($q) use ($user) {
+            $q->where('email', $user->email);
+        })->pluck('id')->toArray();
+        
+        // Fusionner et dédoublonner les IDs
+        $allClientIds = array_unique(array_merge($clientIds, $clientByEmail));
+
+        if (empty($allClientIds)) {
             return response()->json([
                 'success' => true,
-                'data' => []
+                'data' => [],
+                'message' => 'Aucun profil client trouvé.'
             ]);
         }
 
-        $locations = LocationVehicule::with(['vehicule.primaryImage', 'reservation'])
-            ->whereIn('id_client', $clientIds)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // 3. Récupérer les locations avec toutes les relations nécessaires
+        // On inclut vehicule.images pour s'assurer d'avoir au moins une image si primaryImage est nulle
+        $locations = LocationVehicule::with([
+            'vehicule.primaryImage', 
+            'vehicule.images',
+            'reservation',
+            'client.user'
+        ])
+        ->whereIn('id_client', $allClientIds)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        // 4. Transformation pour s'assurer que chaque véhicule a une image par défaut si nécessaire
+        $locations->transform(function ($location) {
+            if ($location->vehicule) {
+                if (!$location->vehicule->primaryImage && $location->vehicule->images->isNotEmpty()) {
+                    $location->vehicule->setRelation('primaryImage', $location->vehicule->images->first());
+                }
+            }
+            return $location;
+        });
 
         return response()->json([
             'success' => true,
+            'count' => $locations->count(),
             'data' => $locations
         ]);
     }

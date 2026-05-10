@@ -49,4 +49,9 @@ class Client extends Model
     {
         return $this->hasMany(CommandeService::class, 'id_client');
     }
+
+    public function locationsVehicule(): HasMany
+    {
+        return $this->hasMany(LocationVehicule::class, 'id_client');
+    }
 }
