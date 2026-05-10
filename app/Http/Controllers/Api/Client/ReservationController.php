@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\Chambre;
+use App\Models\Client;
 use App\Models\DemandeVisite;
 use App\Services\BookingService;
 use App\Services\PaymentService;
@@ -36,9 +37,19 @@ class ReservationController extends Controller
      */
     public function index()
     {
-        $client = Auth::user()->client;
+        $user = Auth::user();
+        
+        // 1. Récupérer les IDs de clients liés par id_utilisateur
+        $clientIds = Client::where('id_utilisateur', $user->id)->pluck('id')->toArray();
 
-        if (!$client) {
+        // 2. Fallback: Chercher par email si nécessaire
+        $clientByEmail = Client::whereHas('user', function($q) use ($user) {
+            $q->where('email', $user->email);
+        })->pluck('id')->toArray();
+        
+        $allClientIds = array_unique(array_merge($clientIds, $clientByEmail));
+
+        if (empty($allClientIds)) {
             return response()->json([
                 'success' => true,
                 'data' => []
@@ -46,7 +57,7 @@ class ReservationController extends Controller
         }
 
         $reservations = Reservation::with(['details.chambre.typeChambre', 'details.chambre.propriete', 'details.chambre.medias'])
-            ->where('id_client', $client->id)
+            ->whereIn('id_client', $allClientIds)
             ->orderBy('created_at', 'desc')
             ->get();
 

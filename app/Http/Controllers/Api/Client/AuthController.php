@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -110,7 +111,10 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()->currentAccessToken();
+        if (method_exists($token, 'delete')) {
+            $token->delete();
+        }
 
         return response()->json([
             'success' => true,
@@ -148,7 +152,7 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'google_id' => $request->google_id,
-                'password' => Hash::make(str_random(16)),
+                'password' => Hash::make(Str::random(16)),
                 'type_utilisateur' => 'client',
                 'statut' => 'actif',
             ]);
@@ -170,9 +174,26 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
+        $user = $request->user();
+        
+        // S'assurer que le client est chargé
+        if (!$user->client) {
+            $client = Client::where('id_utilisateur', $user->id)->first();
+            if (!$client) {
+                // Fallback par email
+                $client = Client::whereHas('user', function($q) use ($user) {
+                    $q->where('email', $user->email);
+                })->first();
+            }
+            
+            if ($client) {
+                $user->setRelation('client', $client);
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'user' => $request->user()->load('client')
+            'user' => $user->load('client'),
         ]);
     }
 }

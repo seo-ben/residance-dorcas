@@ -21,9 +21,18 @@ class ServiceController extends Controller
     public function indexCommandes()
     {
         $user = Auth::user();
-        $client = $user->client;
+        
+        // 1. Récupérer les IDs de clients liés par id_utilisateur
+        $clientIds = Client::where('id_utilisateur', $user->id)->pluck('id')->toArray();
 
-        if (!$client) {
+        // 2. Fallback: Chercher par email si nécessaire
+        $clientByEmail = Client::whereHas('user', function($q) use ($user) {
+            $q->where('email', $user->email);
+        })->pluck('id')->toArray();
+        
+        $allClientIds = array_unique(array_merge($clientIds, $clientByEmail));
+
+        if (empty($allClientIds)) {
             return response()->json([
                 'success' => true,
                 'data' => []
@@ -31,7 +40,7 @@ class ServiceController extends Controller
         }
 
         $commandes = CommandeService::with(['details.service', 'reservation'])
-            ->where('id_client', $client->id)
+            ->whereIn('id_client', $allClientIds)
             ->orderBy('date_commande', 'desc')
             ->get();
 
