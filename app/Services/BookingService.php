@@ -203,6 +203,7 @@ class BookingService
             'date_depart' => $data['date_depart'],
             'prix_total' => $pricing['prix_total'],
             'prix_original' => $pricing['prix_original'],
+            'type_reservation' => 'appartement', // Valeur par défaut pour éviter l'erreur NOT NULL
             'reduction_montant' => ($pricing['reduction_duree'] + $pricing['reduction_fidelite']),
             'reduction_pourcentage' => $pricing['prix_original'] > 0 ? (($pricing['reduction_duree'] + $pricing['reduction_fidelite']) / $pricing['prix_original']) * 100 : 0,
             'id_demande_visite' => $data['visite_id'] ?? null,
