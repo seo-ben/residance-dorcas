@@ -27,18 +27,34 @@ class VehiculeController extends Controller
         // 2. Fallback: Chercher par email si nécessaire
         $clientByEmail = Client::whereHas('user', function($q) use ($user) {
             $q->where('email', $user->email);
-        })->pluck('id')->toArray();
+        })->get();
+        
+        $clientIdsByEmail = $clientByEmail->pluck('id')->toArray();
         
         // Fusionner et dédoublonner les IDs
-        $allClientIds = array_unique(array_merge($clientIds, $clientByEmail));
+        $allClientIds = array_unique(array_merge($clientIds, $clientIdsByEmail));
 
         if (empty($allClientIds)) {
             return response()->json([
                 'success' => true,
+                'debug_search_info' => [
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'status' => 'No client profile found'
+                ],
                 'data' => [],
                 'message' => 'Aucun profil client trouvé.'
             ]);
         }
+
+        // Récupérer les détails des profils clients trouvés pour le debug
+        $debugClients = Client::whereIn('id', $allClientIds)->get()->map(function($c) {
+            return [
+                'client_id' => $c->id,
+                'linked_user_id' => $c->id_utilisateur,
+                'has_user_relation' => $c->user ? 'YES' : 'NO'
+            ];
+        });
 
         // 3. Récupérer les locations avec toutes les relations nécessaires
         // On inclut vehicule.images pour s'assurer d'avoir au moins une image si primaryImage est nulle
@@ -64,6 +80,15 @@ class VehiculeController extends Controller
 
         return response()->json([
             'success' => true,
+            'debug_search_info' => [
+                'authenticated_user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                ],
+                'client_profiles_found' => $debugClients,
+                'search_method' => 'ID + Email Fallback',
+                'total_locations_found' => $locations->count()
+            ],
             'data' => $locations,
             'locations' => $locations // Doubler la clé au cas où l'app attend 'locations'
         ]);

@@ -46,6 +46,13 @@ class ServiceController extends Controller
 
         return response()->json([
             'success' => true,
+            'debug_search_info' => [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'client_ids_found' => $allClientIds,
+                'search_method' => 'ID + Email Fallback',
+                'count' => $commandes->count()
+            ],
             'data' => $commandes
         ]);
     }

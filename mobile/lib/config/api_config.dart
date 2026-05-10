@@ -1,8 +1,8 @@
 class ApiConfig {
-  static const String baseUrl = 'https://dorcas.kirefrais.com/api';
+  static const String baseUrl = 'https://dorcas.kirefrais.com';
   static const String storageUrl = 'https://dorcas.kirefrais.com/storage';
-  static const String clientPrefix = '/client';
-  
+  static const String clientPrefix = '/api/client';
+
   // Auth
   static const String login = '$clientPrefix/login';
   static const String loginGoogle = '$clientPrefix/login/google';

@@ -5,7 +5,7 @@ import '../config/api_config.dart';
 
 class VehicleProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
-  
+
   List<Vehicule> _vehicles = [];
   List<dynamic> _userRentals = [];
   bool _isLoading = false;
@@ -19,10 +19,39 @@ class VehicleProvider with ChangeNotifier {
     _userRentals = [];
     notifyListeners();
 
+    final String fullUrl =
+        "${ApiConfig.baseUrl}${ApiConfig.vehicules}/mes-locations";
+    debugPrint("----------------------------------------------------------");
+    debugPrint("INFO RECHERCHE LOCATIONS MOBILE :");
+    debugPrint("1. L'application mobile appelle l'URL complète: $fullUrl");
+    debugPrint(
+      "2. Le serveur identifie l'utilisateur par son Token d'authentification.",
+    );
+    debugPrint(
+      "3. La recherche côté serveur est optimisée pour trouver le client par son ID interne ET par son Email.",
+    );
+    debugPrint(
+      "4. Cela permet de récupérer toutes les locations, même en cas de doublons de profil.",
+    );
+    debugPrint("----------------------------------------------------------");
+
     try {
-      final response = await _apiService.get("${ApiConfig.vehicules}/mes-locations");
+      final response = await _apiService.get(
+        "${ApiConfig.vehicules}/mes-locations",
+      );
       if (response.statusCode == 200) {
         _userRentals = response.data['data'];
+
+        debugPrint("RESULTAT RECHERCHE :");
+        debugPrint("- Nombre de locations reçues: ${_userRentals.length}");
+        if (response.data['debug_search_info'] != null) {
+          debugPrint(
+            "- Infos debug serveur: ${response.data['debug_search_info']}",
+          );
+        }
+        debugPrint(
+          "----------------------------------------------------------",
+        );
       }
     } catch (e) {
       debugPrint("Error fetching user vehicle rentals: $e");
@@ -50,15 +79,24 @@ class VehicleProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> bookVehicle(int vehicleId, String dateDebut, String dateFin, int? reservationId, String? notes) async {
+  Future<bool> bookVehicle(
+    int vehicleId,
+    String dateDebut,
+    String dateFin,
+    int? reservationId,
+    String? notes,
+  ) async {
     try {
-      final response = await _apiService.post("${ApiConfig.vehicules}/louer", data: {
-        'id_vehicule': vehicleId,
-        'date_debut': dateDebut,
-        'date_fin': dateFin,
-        'id_reservation': reservationId,
-        'notes': notes,
-      });
+      final response = await _apiService.post(
+        "${ApiConfig.vehicules}/louer",
+        data: {
+          'id_vehicule': vehicleId,
+          'date_debut': dateDebut,
+          'date_fin': dateFin,
+          'id_reservation': reservationId,
+          'notes': notes,
+        },
+      );
       return response.statusCode == 200;
     } catch (e) {
       return false;
