@@ -187,6 +187,9 @@ class BookingService
     {
         $chambre = Chambre::findOrFail($data['chambre_id']);
         $pricing = $this->calculatePrice($chambre, $data['date_arrivee'], $data['date_depart']);
+        
+        // Logique dynamique : long_terme si >= 30 jours, sinon court_terme
+        $typeReservation = ($pricing['nb_jours'] >= 30) ? 'long_terme' : 'court_terme';
 
         if (!$reservation) {
             $reservation = new Reservation();
@@ -196,20 +199,20 @@ class BookingService
             $reservation->id_client = $client->id;
             
             $reservation->reference = 'RES-' . strtoupper(Str::random(8));
+            $reservation->type_reservation = $typeReservation;
         }
 
-        $reservation->fill([
-            'date_arrivee' => $data['date_arrivee'],
-            'date_depart' => $data['date_depart'],
-            'prix_total' => $pricing['prix_total'],
-            'prix_original' => $pricing['prix_original'],
-            'type_reservation' => 'appartement', // Valeur par défaut pour éviter l'erreur NOT NULL
-            'reduction_montant' => ($pricing['reduction_duree'] + $pricing['reduction_fidelite']),
-            'reduction_pourcentage' => $pricing['prix_original'] > 0 ? (($pricing['reduction_duree'] + $pricing['reduction_fidelite']) / $pricing['prix_original']) * 100 : 0,
-            'id_demande_visite' => $data['visite_id'] ?? null,
-            'notes_client' => $data['notes'] ?? null,
-            'statut' => $data['statut'] ?? 'brouillon',
-        ]);
+        $reservation->id_client = $reservation->id_client ?? \App\Models\Client::where('id_utilisateur', Auth::id())->first()->id;
+        $reservation->type_reservation = $typeReservation;
+        $reservation->date_arrivee = $data['date_arrivee'];
+        $reservation->date_depart = $data['date_depart'];
+        $reservation->prix_total = $pricing['prix_total'];
+        $reservation->prix_original = $pricing['prix_original'];
+        $reservation->reduction_montant = ($pricing['reduction_duree'] + $pricing['reduction_fidelite']);
+        $reservation->reduction_pourcentage = $pricing['prix_original'] > 0 ? (($pricing['reduction_duree'] + $pricing['reduction_fidelite']) / $pricing['prix_original']) * 100 : 0;
+        $reservation->id_demande_visite = $data['visite_id'] ?? null;
+        $reservation->notes_client = $data['notes'] ?? null;
+        $reservation->statut = $data['statut'] ?? 'brouillon';
 
         $reservation->save();
 
