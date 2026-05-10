@@ -64,8 +64,8 @@ class VehiculeController extends Controller
 
         return response()->json([
             'success' => true,
-            'count' => $locations->count(),
-            'data' => $locations
+            'data' => $locations,
+            'locations' => $locations // Doubler la clé au cas où l'app attend 'locations'
         ]);
     }
 

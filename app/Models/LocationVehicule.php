@@ -30,6 +30,23 @@ class LocationVehicule extends Model
         'prix_total' => 'decimal:2',
     ];
 
+    protected $appends = ['date_debut_format', 'date_fin_format', 'prix_total_format'];
+
+    public function getDateDebutFormatAttribute()
+    {
+        return $this->date_debut ? $this->date_debut->format('d/m/Y') : null;
+    }
+
+    public function getDateFinFormatAttribute()
+    {
+        return $this->date_fin ? $this->date_fin->format('d/m/Y') : null;
+    }
+
+    public function getPrixTotalFormatAttribute()
+    {
+        return number_format($this->prix_total, 0, ',', ' ') . ' FCFA';
+    }
+
     public function vehicule(): BelongsTo
     {
         return $this->belongsTo(Vehicule::class, 'id_vehicule');
