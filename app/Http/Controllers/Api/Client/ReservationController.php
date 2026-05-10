@@ -63,7 +63,7 @@ class ReservationController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'chambre_id' => 'required|exists:chambres,id',
+            'chambre_id' => 'required|exists:appartement,id',
             'date_arrivee' => 'required|date|after_or_equal:today',
             'date_depart' => 'required|date|after:date_arrivee',
             'visite_id' => 'nullable|exists:demande_visites,id',

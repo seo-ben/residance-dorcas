@@ -268,7 +268,7 @@ class AdminReservationController extends Controller
     {
         $validated = $request->validate([
             'id_client' => 'required|exists:clients,id',
-            'id_chambre' => 'required|exists:chambres,id',
+            'id_chambre' => 'required|exists:appartement,id',
             'date_arrivee' => 'required|date|after_or_equal:today',
             'date_depart' => 'required|date|after:date_arrivee',
             'prix_total' => 'required|numeric|min:0',

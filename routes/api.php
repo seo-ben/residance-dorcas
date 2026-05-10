@@ -55,10 +55,15 @@ Route::prefix('client')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
+        Route::get('/services/mes-commandes', [ServiceController::class, 'indexCommandes']);
         Route::post('/services/commander', [ServiceController::class, 'store']);
+        
+        Route::get('/vehicules/mes-locations', [VehiculeController::class, 'indexLocations']);
+        Route::post('/vehicules/louer', [VehiculeController::class, 'book']);
         
         Route::get('/visites', [VisiteController::class, 'index']);
         Route::get('/visites/{id}', [VisiteController::class, 'show']);
+        Route::post('/visites', [VisiteController::class, 'store']);
         
         // Favoris
         Route::get('/favoris', [FavorisController::class, 'index']);

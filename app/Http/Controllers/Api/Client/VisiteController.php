@@ -65,4 +65,43 @@ class VisiteController extends Controller
             ]
         ]);
     }
+
+    /**
+     * @group Client - Visites
+     * Créer une demande de visite
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'id_chambre' => 'required|exists:appartement,id',
+            'date_visite' => 'required|date|after_or_equal:today',
+            'heure_visite' => 'required|date_format:H:i',
+            'message' => 'nullable|string'
+        ]);
+
+        $client = Client::where('id_utilisateur', Auth::id())->first();
+
+        if (!$client) {
+            $client = Client::create([
+                'id_utilisateur' => Auth::id(),
+                'points_fidelite' => 0
+            ]);
+        }
+
+        $dateVisiteSouhaitee = Carbon::parse($request->date_visite . ' ' . $request->heure_visite);
+
+        $demande = DemandeVisite::create([
+            'id_client' => $client->id,
+            'id_chambre' => $request->id_chambre,
+            'date_visite_souhaitee' => $dateVisiteSouhaitee,
+            'message' => $request->message,
+            'statut' => 'en_attente'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Votre demande de visite a été enregistrée avec succès.',
+            'data' => $demande->load('chambre.propriete')
+        ]);
+    }
 }

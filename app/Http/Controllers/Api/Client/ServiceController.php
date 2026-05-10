@@ -16,6 +16,33 @@ class ServiceController extends Controller
 {
     /**
      * @group Client - Services
+     * Liste des commandes de services du client
+     */
+    public function indexCommandes()
+    {
+        $user = Auth::user();
+        $client = Client::where('id_utilisateur', $user->id)->first();
+
+        if (!$client) {
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        $commandes = CommandeService::with(['details.service', 'reservation'])
+            ->where('id_client', $client->id)
+            ->orderBy('date_commande', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $commandes
+        ]);
+    }
+
+    /**
+     * @group Client - Services
      * Liste des services disponibles
      */
     public function index()
@@ -36,10 +63,10 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_service' => 'required|exists:services,id',
+            'id_service' => 'required|exists:services,id,statut,actif',
             'quantite' => 'required|integer|min:1',
             'date_service' => 'required|date|after_or_equal:today',
-            'heure_service' => 'required',
+            'heure_service' => 'required|date_format:H:i',
             'notes' => 'nullable|string'
         ]);
 
@@ -49,8 +76,7 @@ class ServiceController extends Controller
         if (!$client) {
             $client = Client::create([
                 'id_utilisateur' => $user->id,
-                'telephone' => '',
-                'adresse' => ''
+                'points_fidelite' => 0
             ]);
         }
 
@@ -63,6 +89,8 @@ class ServiceController extends Controller
 
         $dateServiceSouhaitee = Carbon::parse($request->date_service . ' ' . $request->heure_service);
 
+        $service = Service::find($request->id_service);
+
         $commande = CommandeService::create([
             'id_reservation' => $activeReservation ? $activeReservation->id : null,
             'id_client' => $client->id,
@@ -72,10 +100,7 @@ class ServiceController extends Controller
             'notes_client' => $request->notes
         ]);
 
-        $service = Service::find($request->id_service);
-
-        DetailCommandeService::create([
-            'id_commande_service' => $commande->id,
+        $commande->details()->create([
             'id_service' => $service->id,
             'quantite' => $request->quantite,
             'prix_unitaire' => $service->prix,

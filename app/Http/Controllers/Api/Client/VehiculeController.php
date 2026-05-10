@@ -15,6 +15,33 @@ class VehiculeController extends Controller
 {
     /**
      * @group Client - Véhicules
+     * Liste des locations de véhicules du client
+     */
+    public function indexLocations()
+    {
+        $user = Auth::user();
+        $client = Client::where('id_utilisateur', $user->id)->first();
+
+        if (!$client) {
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        $locations = LocationVehicule::with(['vehicule.primaryImage', 'reservation'])
+            ->where('id_client', $client->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $locations
+        ]);
+    }
+
+    /**
+     * @group Client - Véhicules
      * Liste des véhicules disponibles
      */
     public function index()
@@ -80,8 +107,7 @@ class VehiculeController extends Controller
         if (!$client) {
             $client = Client::create([
                 'id_utilisateur' => $user->id,
-                'telephone' => '',
-                'adresse' => ''
+                'points_fidelite' => 0
             ]);
         }
 
