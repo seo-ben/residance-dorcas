@@ -109,6 +109,11 @@ class ReservationController extends Controller
         $reservation = isset($data['reservation_id']) ? Reservation::findOrFail($data['reservation_id']) : null;
         if ($reservation && $reservation->id_client !== optional(Auth::user()->client)->id) abort(403);
 
+        // Vérification disponibilité avant sauvegarde
+        if (!$this->bookingService->checkAvailability($data['chambre_id'], $data['date_arrivee'], $data['date_depart'], $reservation ? $reservation->id : null)) {
+            return redirect()->back()->withInput()->with('error', 'L\'appartement n\'est plus disponible pour ces dates.');
+        }
+
         $data['statut'] = $request->has('save_draft') ? 'brouillon' : 'en_attente_paiement';
         $reservation = $this->bookingService->saveReservation($data, $reservation);
 

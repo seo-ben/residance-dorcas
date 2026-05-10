@@ -85,21 +85,26 @@ class BookingService
     /**
      * Vérifie la disponibilité d'une chambre pour une période donnée.
      */
-    public function checkAvailability($chambreId, $dateArrivee, $dateDepart)
+    public function checkAvailability($chambreId, $dateArrivee, $dateDepart, $excludeReservationId = null)
     {
         $chambre = Chambre::findOrFail($chambreId);
 
         // Vérifier les réservations existantes
-        $conflictualReservations = DetailReservation::whereHas('reservation', function ($query) use ($dateArrivee, $dateDepart) {
-            $query->whereNotIn('statut', ['annulee', 'expiree'])
-                ->where(function ($q) use ($dateArrivee, $dateDepart) {
-                    $q->whereBetween('date_arrivee', [$dateArrivee, $dateDepart])
-                        ->orWhereBetween('date_depart', [$dateArrivee, $dateDepart])
-                        ->orWhere(function ($innerQ) use ($dateArrivee, $dateDepart) {
-                            $innerQ->where('date_arrivee', '<=', $dateArrivee)
-                                ->where('date_depart', '>=', $dateDepart);
-                        });
-                });
+        $conflictualReservations = DetailReservation::whereHas('reservation', function ($query) use ($dateArrivee, $dateDepart, $excludeReservationId) {
+            $query->whereNotIn('statut', ['annulee', 'expiree']);
+            
+            if ($excludeReservationId) {
+                $query->where('id', '!=', $excludeReservationId);
+            }
+
+            $query->where(function ($q) use ($dateArrivee, $dateDepart) {
+                $q->whereBetween('date_arrivee', [$dateArrivee, $dateDepart])
+                    ->orWhereBetween('date_depart', [$dateArrivee, $dateDepart])
+                    ->orWhere(function ($innerQ) use ($dateArrivee, $dateDepart) {
+                        $innerQ->where('date_arrivee', '<=', $dateArrivee)
+                            ->where('date_depart', '>=', $dateDepart);
+                    });
+            });
         })->where('id_chambre', $chambreId)->exists();
 
         if ($conflictualReservations) {
@@ -200,19 +205,20 @@ class BookingService
             'prix_original' => $pricing['prix_original'],
             'reduction_montant' => ($pricing['reduction_duree'] + $pricing['reduction_fidelite']),
             'reduction_pourcentage' => $pricing['prix_original'] > 0 ? (($pricing['reduction_duree'] + $pricing['reduction_fidelite']) / $pricing['prix_original']) * 100 : 0,
-            'id_demande_visite' => $data['visite_id'] ?? $reservation->id_demande_visite,
-            'notes_client' => $data['notes'] ?? $reservation->notes_client,
+            'id_demande_visite' => $data['visite_id'] ?? null,
+            'notes_client' => $data['notes'] ?? null,
             'statut' => $data['statut'] ?? 'brouillon',
         ]);
 
         $reservation->save();
 
-        // Détails
+        // Gestion des détails (id_chambre)
         $detail = $reservation->details()->firstOrNew(['id_reservation' => $reservation->id]);
         $detail->fill([
             'id_chambre' => $chambre->id,
             'prix_unitaire' => $chambre->prix_base,
-            'quantite' => $pricing['nb_jours'],
+            'nb_nuits' => $pricing['nb_jours'],
+            'total' => $pricing['prix_total']
         ])->save();
 
         return $reservation;
