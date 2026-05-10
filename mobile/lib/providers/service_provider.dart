@@ -7,10 +7,29 @@ class ServiceProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
   
   List<ServiceModel> _services = [];
+  List<dynamic> _userOrders = [];
   bool _isLoading = false;
 
   List<ServiceModel> get services => _services;
+  List<dynamic> get userOrders => _userOrders;
   bool get isLoading => _isLoading;
+
+  Future<void> fetchUserOrders() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get("${ApiConfig.services}/mes-commandes");
+      if (response.statusCode == 200) {
+        _userOrders = response.data['data'];
+      }
+    } catch (e) {
+      debugPrint("Error fetching user service orders: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> fetchServices() async {
     _isLoading = true;

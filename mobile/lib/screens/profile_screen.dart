@@ -4,6 +4,8 @@ import '../providers/auth_provider.dart';
 import '../utils/theme.dart';
 import 'reservation_list_screen.dart';
 import 'visit_list_screen.dart';
+import 'vehicle_rental_list_screen.dart';
+import 'service_order_list_screen.dart';
 import 'login_screen.dart';
 import 'support_screen.dart';
 
@@ -115,6 +117,18 @@ class ProfileScreen extends StatelessWidget {
                         title: 'Mes Visites',
                         subtitle: 'Suivi de vos demandes de visites',
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VisitListScreen())),
+                      ),
+                      _buildProfileItem(
+                        icon: Icons.directions_car_rounded,
+                        title: 'Mes Locations',
+                        subtitle: 'Véhicules loués et réservés',
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleRentalListScreen())),
+                      ),
+                      _buildProfileItem(
+                        icon: Icons.room_service_rounded,
+                        title: 'Mes Services',
+                        subtitle: 'Commandes de services et extras',
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServiceOrderListScreen())),
                       ),
                     ],
                     _buildProfileItem(

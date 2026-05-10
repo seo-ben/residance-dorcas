@@ -7,10 +7,29 @@ class VehicleProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
   
   List<Vehicule> _vehicles = [];
+  List<dynamic> _userRentals = [];
   bool _isLoading = false;
 
   List<Vehicule> get vehicles => _vehicles;
+  List<dynamic> get userRentals => _userRentals;
   bool get isLoading => _isLoading;
+
+  Future<void> fetchUserRentals() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.get("${ApiConfig.vehicules}/mes-locations");
+      if (response.statusCode == 200) {
+        _userRentals = response.data['data'];
+      }
+    } catch (e) {
+      debugPrint("Error fetching user vehicle rentals: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> fetchVehicles() async {
     _isLoading = true;
