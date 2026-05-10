@@ -181,7 +181,15 @@ class _ServiceOrderScreenState extends State<ServiceOrderScreen> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Commande enregistrée !'), backgroundColor: Colors.green));
+        // Rafraîchir la liste des commandes
+        context.read<ServiceProvider>().fetchUserOrders();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Commande enregistrée avec succès !'),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Erreur lors de la commande'), backgroundColor: Colors.red));

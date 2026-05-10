@@ -40,7 +40,9 @@ class AuthProvider with ChangeNotifier {
       final token = prefs.getString('auth_token');
       if (token != null) {
         _isAuthenticated = true;
-        await fetchUser();
+        // On ne bloque plus l'initialisation par fetchUser()
+        // On lance le chargement en arrière-plan
+        fetchUser(); 
       }
     } catch (e) {
       debugPrint("Initial state error: $e");

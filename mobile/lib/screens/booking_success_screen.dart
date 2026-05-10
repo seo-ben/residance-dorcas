@@ -32,7 +32,8 @@ class BookingSuccessScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
-                  child: SpinKitDoubleBounce(
+                  child: Icon(
+                    Icons.check_circle_rounded,
                     color: Colors.green,
                     size: 100,
                   ),
@@ -84,23 +85,36 @@ class BookingSuccessScreen extends StatelessWidget {
   }
 
   Widget _buildPrimaryButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: () => context.read<BookingProvider>().launchPayment(reservationId),
-        icon: const Icon(Icons.payment_rounded, color: Colors.white),
-        label: const Text(
-          'Payer l\'acompte',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        ),
-      ),
+    return Consumer<BookingProvider>(
+      builder: (context, provider, child) {
+        return SizedBox(
+          width: double.infinity,
+          height: 60,
+          child: ElevatedButton.icon(
+            onPressed: provider.isLoading 
+              ? null 
+              : () => provider.launchPayment(reservationId),
+            icon: provider.isLoading 
+              ? const SizedBox(
+                  width: 20, 
+                  height: 20, 
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                )
+              : const Icon(Icons.payment_rounded, color: Colors.white),
+            label: Text(
+              provider.isLoading ? 'Traitement...' : 'Payer l\'acompte',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 8,
+              shadowColor: AppColors.primary.withOpacity(0.3),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            ),
+          ),
+        );
+      },
     );
   }
 

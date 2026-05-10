@@ -21,7 +21,7 @@ class ServiceController extends Controller
     public function indexCommandes()
     {
         $user = Auth::user();
-        $client = Client::where('id_utilisateur', $user->id)->first();
+        $client = $user->client;
 
         if (!$client) {
             return response()->json([
@@ -71,7 +71,7 @@ class ServiceController extends Controller
         ]);
 
         $user = Auth::user();
-        $client = Client::where('id_utilisateur', $user->id)->first();
+        $client = $user->client;
 
         if (!$client) {
             $client = Client::create([
@@ -109,7 +109,7 @@ class ServiceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Votre commande a été enregistrée avec succès.',
+            'message' => 'Votre commande de service a été enregistrée.',
             'data' => $commande->load('details.service')
         ]);
     }

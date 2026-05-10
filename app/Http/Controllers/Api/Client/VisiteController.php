@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\DemandeVisite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class VisiteController extends Controller
 {
@@ -16,21 +17,24 @@ class VisiteController extends Controller
      */
     public function index()
     {
-        
-        $client = Client::where('id_utilisateur', Auth::id())->firstOrFail();
-        
-        $demandes = DemandeVisite::with([
-            'chambre.propriete', 
-            'chambre.typeChambre',
-            'reservation.paiements'
-        ])
-        ->where('id_client', $client->id)
-        ->orderBy('date_demande', 'desc')
-        ->get();
-            
+        $user = Auth::user();
+        $client = $user->client;
+
+        if (!$client) {
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        $visites = DemandeVisite::with('chambre.propriete')
+            ->where('id_client', $client->id)
+            ->orderBy('date_visite_souhaitee', 'desc')
+            ->get();
+
         return response()->json([
             'success' => true,
-            'data' => $demandes
+            'data' => $visites
         ]);
     }
 
@@ -80,11 +84,12 @@ class VisiteController extends Controller
             'message' => 'nullable|string'
         ]);
 
-        $client = Client::where('id_utilisateur', Auth::id())->first();
+        $user = Auth::user();
+        $client = $user->client;
 
         if (!$client) {
             $client = Client::create([
-                'id_utilisateur' => Auth::id(),
+                'id_utilisateur' => $user->id,
                 'points_fidelite' => 0
             ]);
         }

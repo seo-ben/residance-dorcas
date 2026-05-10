@@ -16,6 +16,7 @@ class ServiceProvider with ChangeNotifier {
 
   Future<void> fetchUserOrders() async {
     _isLoading = true;
+    _userOrders = []; // On vide avant de charger
     notifyListeners();
 
     try {

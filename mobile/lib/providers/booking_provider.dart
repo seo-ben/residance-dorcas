@@ -69,6 +69,9 @@ class BookingProvider with ChangeNotifier {
   }
 
   Future<void> launchPayment(int reservationId) async {
+    _isLoading = true;
+    notifyListeners();
+    
     try {
       final response = await _apiService.get("${ApiConfig.reservations}/$reservationId/paiement-link");
       if (response.statusCode == 200) {
@@ -79,6 +82,9 @@ class BookingProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("Payment launch error: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 }

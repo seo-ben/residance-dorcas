@@ -20,7 +20,7 @@ class VehiculeController extends Controller
     public function indexLocations()
     {
         $user = Auth::user();
-        $client = Client::where('id_utilisateur', $user->id)->first();
+        $client = $user->client;
 
         if (!$client) {
             return response()->json([
@@ -102,7 +102,7 @@ class VehiculeController extends Controller
         ]);
 
         $user = Auth::user();
-        $client = Client::where('id_utilisateur', $user->id)->first();
+        $client = $user->client;
 
         if (!$client) {
             $client = Client::create([

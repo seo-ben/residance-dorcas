@@ -72,9 +72,14 @@ class ReservationController extends Controller
             'save_draft' => 'boolean'
         ]);
 
-        $client = Auth::user()->client;
+        $user = Auth::user();
+        $client = $user->client;
+
         if (!$client) {
-            return response()->json(['message' => 'Profil client non trouvé.'], 404);
+            $client = \App\Models\Client::create([
+                'id_utilisateur' => $user->id,
+                'points_fidelite' => 0
+            ]);
         }
 
         $reservation = isset($data['reservation_id']) ? Reservation::findOrFail($data['reservation_id']) : null;
@@ -162,7 +167,7 @@ class ReservationController extends Controller
         }
 
         $result = $this->leekpayService->createPaymentLink(
-            $reservation->montant_total,
+            $reservation->prix_total,
             "Réservation #" . $reservation->reference,
             $reservation->id
         );
