@@ -66,18 +66,18 @@ class FinanceController extends Controller
         $paiements = $query->paginate(15);
 
         $statistiques = [
-            'total_jour' => Paiement::whereDate('date_paiement', Carbon::today())
+            'total_jour' => Paiement::query()->whereDate('date_paiement', Carbon::today())
                 ->where('statut', 'valide')
                 ->sum('montant'),
-            'total_mois' => Paiement::whereMonth('date_paiement', Carbon::now()->month)
+            'total_mois' => Paiement::query()->whereMonth('date_paiement', Carbon::now()->month)
                 ->where('statut', 'valide')
                 ->sum('montant'),
-            'total_annee' => Paiement::whereYear('date_paiement', Carbon::now()->year)
+            'total_annee' => Paiement::query()->whereYear('date_paiement', Carbon::now()->year)
                 ->where('statut', 'valide')
                 ->sum('montant'),
-            'en_attente' => Paiement::where('statut', 'en_attente')->count(),
-            'refuse' => Paiement::where('statut', 'refuse')->count(),
-            'rembourse' => Paiement::where('statut', 'rembourse')->sum('montant_rembourse'),
+            'en_attente' => Paiement::query()->where('statut', 'en_attente')->count(),
+            'refuse' => Paiement::query()->where('statut', 'refuse')->count(),
+            'rembourse' => Paiement::query()->where('statut', 'rembourse')->sum('montant_rembourse'),
             'revpar' => $this->calculerRevPAR($dateDebut, $dateFin),
             'taux_occupation' => $this->calculerTauxOccupation($dateDebut, $dateFin),
         ];
@@ -112,7 +112,7 @@ class FinanceController extends Controller
         // Calculer les taxes (hypothèse : 10% de TVA + taxe de séjour fixe par jour)
         $tauxTVA = 0.10; // 10%
         $taxeSejourParJour = 1000; // Exemple : 1000 F CFA par jour
-        $reservations = Reservation::whereBetween('date_arrivee', [$debut, $fin])
+        $reservations = Reservation::query()->whereBetween('date_arrivee', [$debut, $fin])
             ->where('statut', 'confirmee')
             ->get();
 

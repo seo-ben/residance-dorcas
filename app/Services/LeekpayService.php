@@ -105,7 +105,7 @@ class LeekpayService
                 // Éviter les paiements en double
                 $transactionId = $payload['transaction_id'] ?? ($payload['id'] ?? uniqid());
                 
-                if (Paiement::where('reference_transaction', $transactionId)->exists()) {
+                if (Paiement::query()->where('reference_transaction', $transactionId)->exists()) {
                     return true;
                 }
 
@@ -124,7 +124,7 @@ class LeekpayService
                     $paiement->save();
                     
                     // Valider la réservation
-                    $reservation = Reservation::find($metadata['reservation_id']);
+                    $reservation = Reservation::query()->find($metadata['reservation_id']);
                     if ($reservation) {
                         $reservation->update([
                             'statut' => 'terminee',
@@ -137,7 +137,7 @@ class LeekpayService
                     $paiement->save();
                     
                     // Passer la demande de visite à Payer / Confirmée
-                    $demandeVisite = DemandeVisite::find($metadata['demande_visite_id']);
+                    $demandeVisite = DemandeVisite::query()->find($metadata['demande_visite_id']);
                     if ($demandeVisite) {
                         $demandeVisite->update(['statut' => 'payee_confirmable']);
                     }
