@@ -6,7 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])    
     <!-- Meta tags SEO -->
     <title>{{ config('app.name', 'Résidence Dorcas') }} - Locations d'Appartements Meublés à Lomé</title>
     <meta name="description" content="Résidence Dorcas : Votre partenaire immobilier à Lomé. Locations d'appartements et studios meublés de haut standing, avec Wi-Fi, climatisation et sécurité 24h/24.">
@@ -44,7 +53,7 @@
     <meta name="msapplication-TileColor" content="#E53E3E">
     <meta name="msapplication-config" content="{{ asset('browserconfig.xml') }}">
     
-
+    <style>
         [x-cloak] { display: none !important; }
         
        /* Base Styles */
