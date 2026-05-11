@@ -5,6 +5,7 @@ import '../providers/booking_provider.dart';
 import '../utils/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'payment_declaration_screen.dart';
 
 class ReservationDetailScreen extends StatelessWidget {
   final ReservationModel reservation;
@@ -160,18 +161,50 @@ class ReservationDetailScreen extends StatelessWidget {
   }
 
   Widget _buildPaymentButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: () => context.read<BookingProvider>().launchPayment(reservation.id),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: () => context.read<BookingProvider>().launchPayment(reservation.id),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Payer en ligne', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
         ),
-        child: const Text('Payer l\'acompte maintenant', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-      ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: OutlinedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PaymentDeclarationScreen(
+                    type: 'reservation',
+                    itemId: reservation.id,
+                    montant: reservation.montantTotal,
+                    reference: reservation.reference,
+                  ),
+                ),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.primary, width: 2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text(
+              'Déclarer un transfert (T-Money / Flooz)',
+              style: TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -5,8 +5,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../providers/booking_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/apartment_provider.dart';
 import 'login_screen.dart';
 import 'visit_request_screen.dart';
 import 'booking_success_screen.dart';
@@ -98,7 +100,10 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
   Widget _buildReviews() {
     final avis = widget.apartment.avis;
     if (avis.isEmpty) {
-      return const Text('Aucun avis pour le moment.', style: TextStyle(color: AppColors.textLight, fontSize: 14));
+      return const Text(
+        'Aucun avis pour le moment.',
+        style: TextStyle(color: AppColors.textLight, fontSize: 14),
+      );
     }
 
     return Column(
@@ -116,24 +121,35 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(item.clientNom, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    item.clientNom,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Row(
                     children: List.generate(5, (index) {
                       return Icon(
                         Icons.star,
                         size: 14,
-                        color: index < item.note ? Colors.amber : Colors.grey[300],
+                        color: index < item.note
+                            ? Colors.amber
+                            : Colors.grey[300],
                       );
                     }),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(item.commentaire, style: const TextStyle(fontSize: 14, color: AppColors.textDark)),
+              Text(
+                item.commentaire,
+                style: const TextStyle(fontSize: 14, color: AppColors.textDark),
+              ),
               const SizedBox(height: 4),
               Text(
                 DateFormat('dd MMM yyyy').format(item.date),
-                style: const TextStyle(fontSize: 12, color: AppColors.textLight),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textLight,
+                ),
               ),
             ],
           ),
@@ -157,12 +173,17 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
         icon: const Icon(Icons.calendar_today, color: AppColors.primary),
         label: const Text(
           'Demander une visite',
-          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
           side: const BorderSide(color: AppColors.primary),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );
@@ -188,8 +209,12 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
                     ? 'Choisir vos dates'
                     : '${DateFormat('dd/MM').format(_selectedDateRange!.start)} - ${DateFormat('dd/MM').format(_selectedDateRange!.end)}',
                 style: TextStyle(
-                  color: _selectedDateRange == null ? AppColors.textLight : AppColors.textDark,
-                  fontWeight: _selectedDateRange == null ? FontWeight.normal : FontWeight.bold,
+                  color: _selectedDateRange == null
+                      ? AppColors.textLight
+                      : AppColors.textDark,
+                  fontWeight: _selectedDateRange == null
+                      ? FontWeight.normal
+                      : FontWeight.bold,
                 ),
               ),
             ),
@@ -210,7 +235,10 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
                 imageUrl: widget.apartment.image!,
                 fit: BoxFit.cover,
               )
-            : Container(color: Colors.grey[300], child: const Icon(Icons.apartment, size: 100)),
+            : Container(
+                color: Colors.grey[300],
+                child: const Icon(Icons.apartment, size: 100),
+              ),
       ),
       leading: CircleAvatar(
         backgroundColor: Colors.white,
@@ -222,9 +250,13 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
       actions: [
         CircleAvatar(
           backgroundColor: Colors.white,
-          child: IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.red),
-            onPressed: () {},
+          child: Consumer<ApartmentProvider>(
+            builder: (context, provider, child) {
+              return IconButton(
+                icon: const Icon(Icons.favorite, color: Colors.red),
+                onPressed: () => provider.toggleFavorite(widget.apartment.id),
+              );
+            },
           ),
         ),
         const SizedBox(width: 10),
@@ -232,7 +264,12 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
           backgroundColor: Colors.white,
           child: IconButton(
             icon: const Icon(Icons.share, color: AppColors.textDark),
-            onPressed: () {},
+            onPressed: () {
+              Share.share(
+                'Regardez cet appartement : ${widget.apartment.type} ${widget.apartment.numero} à ${widget.apartment.propriete ?? "Résidance Dorcas"}. Réservez maintenant sur Dorcas App!',
+                subject: 'Partage d\'appartement',
+              );
+            },
           ),
         ),
         const SizedBox(width: 16),
@@ -247,17 +284,28 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '${widget.apartment.type ?? 'Appartement'} ${widget.apartment.numero}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Expanded(
+              child: Text(
+                '${widget.apartment.type ?? 'Appartement'} ${widget.apartment.numero}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
+            const SizedBox(width: 8),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.star, color: Colors.amber, size: 20),
                 const SizedBox(width: 4),
                 Text(
                   widget.apartment.note.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -268,9 +316,12 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
           children: [
             const Icon(Icons.location_on, color: AppColors.primary, size: 16),
             const SizedBox(width: 4),
-            Text(
-              widget.apartment.propriete ?? 'Résidance Dorcas, Togo',
-              style: const TextStyle(color: AppColors.textLight),
+            Expanded(
+              child: Text(
+                widget.apartment.propriete ?? 'Résidance Dorcas, Togo',
+                style: const TextStyle(color: AppColors.textLight),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -348,7 +399,9 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _selectedDateRange == null ? 'Prix / nuit' : '${_selectedDateRange!.duration.inDays} nuits',
+                _selectedDateRange == null
+                    ? 'Prix / nuit'
+                    : '${_selectedDateRange!.duration.inDays} nuits',
                 style: const TextStyle(color: AppColors.textLight),
               ),
               Text(
@@ -366,22 +419,31 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
             child: Consumer<BookingProvider>(
               builder: (context, bookingProvider, child) {
                 return ElevatedButton(
-                  onPressed: _selectedDateRange == null 
-                      ? _selectDates 
+                  onPressed: _selectedDateRange == null
+                      ? _selectDates
                       : (bookingProvider.isLoading ? null : _handleBooking),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: bookingProvider.isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
-                      : Text(_selectedDateRange == null ? 'Choisir dates' : 'Réserver'),
+                      : Text(
+                          _selectedDateRange == null
+                              ? 'Choisir dates'
+                              : 'Réserver',
+                        ),
                 );
               },
             ),
@@ -394,15 +456,20 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
   void _handleBooking() async {
     final auth = context.read<AuthProvider>();
     if (!auth.isAuthenticated) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
       return;
     }
 
-    final reservationData = await context.read<BookingProvider>().createReservation(
-      chambreId: widget.apartment.id,
-      dateArrivee: _selectedDateRange!.start,
-      dateDepart: _selectedDateRange!.end,
-    );
+    final reservationData = await context
+        .read<BookingProvider>()
+        .createReservation(
+          chambreId: widget.apartment.id,
+          dateArrivee: _selectedDateRange!.start,
+          dateDepart: _selectedDateRange!.end,
+        );
 
     if (mounted) {
       if (reservationData != null) {

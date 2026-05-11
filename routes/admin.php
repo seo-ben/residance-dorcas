@@ -76,14 +76,20 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::prefix('demandes-visite')->name('demandes-visite.')->group(function () {
         Route::get('/', [AdminReservationController::class, 'demandesVisite'])->name('index');
         Route::post('/{demande}/schedule', [AdminReservationController::class, 'scheduleVisite'])->name('schedule');
-        Route::post('/{demande}/reject', [AdminReservationController::class, 'rejectVisite'])->name('reject');
-        Route::post('/{demande}/confirm', [AdminReservationController::class, 'confirmVisite'])->name('confirm');
+        Route::put('/{demande}/reject', [AdminReservationController::class, 'rejectVisite'])->name('reject');
+        Route::put('/{demande}/confirm', [AdminReservationController::class, 'confirmVisite'])->name('confirm');
     });
 
     // Finance
     Route::prefix('finance')->name('finance.')->group(function () {
         Route::get('/', [FinanceController::class, 'index'])->name('index');
         Route::get('/rapports', [FinanceController::class, 'rapports'])->name('rapports');
+        Route::get('/encaissement', [FinanceController::class, 'createEncaissement'])->name('encaissement.create');
+        Route::post('/encaissement', [FinanceController::class, 'storeEncaissement'])->name('encaissement.store');
+        
+        Route::get('/paiements-en-attente', [FinanceController::class, 'pendingPayments'])->name('paiements.pending');
+        Route::post('/paiements/{paiement}/approuver', [FinanceController::class, 'approvePayment'])->name('paiements.approve');
+        Route::post('/paiements/{paiement}/rejeter', [FinanceController::class, 'rejectPayment'])->name('paiements.reject');
         Route::get('/transactions', [FinanceController::class, 'transactions'])->name('transactions');
         Route::get('/export', [FinanceController::class, 'export'])->name('export');
         Route::get('/audit', [FinanceController::class, 'audit'])->name('audit');
@@ -124,6 +130,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::get('/', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'store'])->name('store');
+        Route::get('/{vehicule}', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'show'])->name('show');
         Route::get('/{vehicule}/edit', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'edit'])->name('edit');
         Route::put('/{vehicule}', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'update'])->name('update');
         Route::delete('/{vehicule}', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'destroy'])->name('destroy');

@@ -66,6 +66,9 @@ Route::prefix('client')->group(function () {
         Route::get('/reservations/{id}', [ReservationController::class, 'show']);
         Route::post('/reservations/{id}/annuler', [ReservationController::class, 'cancel']);
         Route::get('/reservations/{id}/paiement-link', [ReservationController::class, 'getPaymentLink']);
+        
+        // Paiements
+        Route::post('/paiements/declarer', [\App\Http\Controllers\Api\Client\PaiementController::class, 'declarePayment']);
     });
 
     // Public Show routes (placed at the end to avoid conflict with specific routes like /mes-commandes)

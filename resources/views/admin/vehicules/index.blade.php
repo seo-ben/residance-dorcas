@@ -125,7 +125,7 @@
                                     </button>
                                 </form>
                             </div>
-                            <a href="#" class="text-xs font-bold text-gray-400 hover:text-red-600 transition-colors uppercase tracking-widest">
+                            <a href="{{ route('admin.vehicules.show', $vehicule) }}" class="text-xs font-bold text-gray-400 hover:text-red-600 transition-colors uppercase tracking-widest">
                                 Historique <i class="fas fa-arrow-right ml-1"></i>
                             </a>
                         </div>

@@ -159,9 +159,15 @@
                     </a>
 
                     <a href="{{ route('admin.services.index') }}" 
-                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.services.*') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                        <i class="fa-solid fa-bell-concierge w-6 text-lg {{ request()->routeIs('admin.services.*') ? 'text-primary-600' : 'text-slate-400' }}"></i>
-                        <span class="ml-3">Services & Commandes</span>
+                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.services.index') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <i class="fa-solid fa-bell-concierge w-6 text-lg {{ request()->routeIs('admin.services.index') ? 'text-primary-600' : 'text-slate-400' }}"></i>
+                        <span class="ml-3">Services (Catalogue)</span>
+                    </a>
+
+                    <a href="{{ route('admin.services.orders') }}" 
+                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.services.orders') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <i class="fa-solid fa-clipboard-list w-6 text-lg {{ request()->routeIs('admin.services.orders') ? 'text-primary-600' : 'text-slate-400' }}"></i>
+                        <span class="ml-3">Commandes Services</span>
                     </a>
 
                     <div class="mt-6 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider px-4">Autres</div>
@@ -173,14 +179,32 @@
                     </a>
 
                     <a href="{{ route('admin.vehicules.index') }}" 
-                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.vehicules.*') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                        <i class="fa-solid fa-car w-6 text-lg {{ request()->routeIs('admin.vehicules.*') ? 'text-primary-600' : 'text-slate-400' }}"></i>
-                        <span class="ml-3">Flotte Véhicules</span>
+                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.vehicules.index') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <i class="fa-solid fa-car w-6 text-lg {{ request()->routeIs('admin.vehicules.index') ? 'text-primary-600' : 'text-slate-400' }}"></i>
+                        <span class="ml-3">Gestion de la Flotte</span>
+                    </a>
+
+                    <a href="{{ route('admin.vehicules.rentals') }}" 
+                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.vehicules.rentals') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <i class="fa-solid fa-key w-6 text-lg {{ request()->routeIs('admin.vehicules.rentals') ? 'text-primary-600' : 'text-slate-400' }}"></i>
+                        <span class="ml-3">Locations de Véhicules</span>
+                    </a>
+
+                    <a href="{{ route('admin.finance.paiements.pending') }}" 
+                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.finance.paiements.pending') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <i class="fa-solid fa-clock-rotate-left w-6 text-lg {{ request()->routeIs('admin.finance.paiements.pending') ? 'text-primary-600' : 'text-slate-400' }}"></i>
+                        <span class="ml-3">Paiements à Valider</span>
+                    </a>
+
+                    <a href="{{ route('admin.finance.encaissement.create') }}" 
+                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.finance.encaissement.create') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <i class="fa-solid fa-cash-register w-6 text-lg {{ request()->routeIs('admin.finance.encaissement.create') ? 'text-primary-600' : 'text-slate-400' }}"></i>
+                        <span class="ml-3">Point d'Encaissement</span>
                     </a>
 
                     <a href="{{ route('admin.finance.index') }}" 
-                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.finance.*') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                        <i class="fa-solid fa-sack-dollar w-6 text-lg {{ request()->routeIs('admin.finance.*') ? 'text-primary-600' : 'text-slate-400' }}"></i>
+                        class="flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.finance.index') ? 'nav-item-active' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <i class="fa-solid fa-sack-dollar w-6 text-lg {{ request()->routeIs('admin.finance.index') ? 'text-primary-600' : 'text-slate-400' }}"></i>
                         <span class="ml-3">Comptabilité</span>
                     </a>
                 </nav>

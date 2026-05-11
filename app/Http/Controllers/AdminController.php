@@ -13,6 +13,8 @@ use App\Models\Paiement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\DemandeVisite;
+use Illuminate\Support\Str;
+
 
 class AdminController extends Controller
 {
@@ -43,6 +45,8 @@ class AdminController extends Controller
             'taux_occupation' => $this->calculerTauxOccupation(),
             'demandes_visite_en_attente' => DemandeVisite::where('statut', 'en_attente')->count(),
             'total_chambres' => Chambre::count(),
+            'commandes_services_en_attente' => \App\Models\CommandeService::where('statut', 'en_attente')->count(),
+            'locations_vehicules_actives' => \App\Models\LocationVehicule::whereIn('statut', ['confirmee', 'en_cours'])->count(),
         ];
 
         $reservationsRecentes = Reservation::with(['client.user', 'details.chambre.propriete'])
@@ -56,7 +60,17 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
-        return view('dashboard', compact('stats', 'reservationsRecentes', 'paiementsRecents'));
+        $commandesRecentes = \App\Models\CommandeService::with(['client.user', 'details.service'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        $locationsRecentes = \App\Models\LocationVehicule::with(['client.user', 'vehicule'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('dashboard', compact('stats', 'reservationsRecentes', 'paiementsRecents', 'commandesRecentes', 'locationsRecentes'));
     }
 
     // In AdminController

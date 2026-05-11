@@ -7,6 +7,7 @@ import '../providers/booking_provider.dart';
 import '../utils/theme.dart';
 import 'login_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 class VehicleBookingScreen extends StatefulWidget {
   final Vehicule vehicle;
@@ -40,7 +41,21 @@ class _VehicleBookingScreenState extends State<VehicleBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Louer un véhicule')),
+      appBar: AppBar(
+        title: const Text('Louer un véhicule'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              Share.share(
+                'Découvrez ce véhicule à louer : ${widget.vehicle.marque} ${widget.vehicle.modele} pour seulement ${widget.vehicle.prixJournalier.toStringAsFixed(0)} F/jour sur Dorcas App!',
+                subject: 'Partage de véhicule',
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(

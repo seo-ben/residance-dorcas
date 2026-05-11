@@ -19,4 +19,5 @@ class ApiConfig {
   static const String reservations = '/$clientPrefix/reservations';
   static const String visites = '/$clientPrefix/visites';
   static const String searchInstant = '/$clientPrefix/search/instant';
+  static const String declarePayment = '/$clientPrefix/paiements/declarer';
 }

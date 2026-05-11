@@ -105,24 +105,6 @@ class AdminReservationController extends Controller
 
     //     return view('admin.demandes-visite.index', compact('demandes', 'dateDebut', 'dateFin'));
     // }
-    /**
-     * Rejette une demande de visite
-     */
-    // public function rejectVisite(Request $request, DemandeVisite $demande)
-    // {
-    //     $validated = $request->validate([
-    //         'notes_admin' => 'required|string|max:500',
-    //     ]);
-
-    //     $demande->update([
-    //         'statut' => 'annulee',
-    //         'id_admin_confirmation' => auth()->id(),
-    //         'notes_admin' => $validated['notes_admin'],
-    //         'date_confirmation' => now(),
-    //     ]); 
-    //     return redirect()->route('admin.demandes-visite.index')
-    //         ->with('success', 'La demande de visite a été rejetée.');
-    // }
 
     // private function calculerTauxOccupation()
     // {
@@ -333,26 +315,6 @@ class AdminReservationController extends Controller
         }
     }
 
-    /**
-     * Confirme une demande de visite
-     */
-    public function confirmVisite(Request $request, DemandeVisite $demande)
-    {
-        $validated = $request->validate([
-            'date_confirmation' => 'required|date|after_or_equal:today',
-            'notes_admin' => 'nullable|string|max:500',
-        ]);
-
-        $demande->update([
-            'statut' => 'confirmee',
-            'date_confirmation' => $validated['date_confirmation'],
-            'id_admin_confirmation' => auth()->id(),
-            'notes_admin' => $validated['notes_admin'],
-        ]);
-
-        return redirect()->route('admin.demandes-visite.index')
-            ->with('success', 'La demande de visite a été confirmée.');
-    }
 
     public function show(Reservation $reservation)
     {
@@ -891,14 +853,14 @@ class AdminReservationController extends Controller
             ]);
 
             // Envoyer une notification automatique au client
-            $message = "Votre demande de visite pour la chambre {$demande->chambre->numero_chambre} a été programmée pour le {$request->date_visite} à {$request->heure_visite}.";
+            $message = "Votre demande de visite pour l'appartement {$demande->chambre->numero_chambre} a été programmée pour le {$request->date_visite} à {$request->heure_visite}.";
             if ($request->notes_admin) {
                 $message .= " Notes : {$request->notes_admin}";
             }
             $this->notificationService->sendNotification(
                 $demande->client->user,
-                $demande->reservation,
-                'email',
+                null,
+                'visite',
                 'Visite programmée',
                 $message
             );
@@ -909,6 +871,49 @@ class AdminReservationController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Erreur lors de la programmation de la visite', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Erreur : ' . $e->getMessage());
+        }
+    }
+
+    public function confirmVisite(Request $request, DemandeVisite $demande)
+    {
+        $request->validate([
+            'date_confirmation' => 'required|date',
+            'notes_admin' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $demande->update([
+                'date_confirmation' => $request->date_confirmation,
+                'statut' => 'confirmee',
+                'notes_admin' => $request->notes_admin,
+                'id_admin_confirmation' => Auth::id(),
+            ]);
+
+            $this->logAction('confirm_visite', $demande, [
+                'date_confirmation' => $request->date_confirmation,
+            ]);
+
+            $message = "Votre demande de visite pour l'appartement {$demande->chambre->numero_chambre} a été confirmée pour le " . Carbon::parse($request->date_confirmation)->format('d/m/Y à H:i') . ".";
+            if ($request->notes_admin) {
+                $message .= " Notes : {$request->notes_admin}";
+            }
+
+            $this->notificationService->sendNotification(
+                $demande->client->user,
+                null,
+                'visite',
+                'Visite confirmée',
+                $message
+            );
+
+            DB::commit();
+            return redirect()->route('admin.demandes-visite.index')
+                ->with('success', 'Visite confirmée et notifiée au client.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Erreur lors de la confirmation de la visite', ['error' => $e->getMessage()]);
             return back()->with('error', 'Erreur : ' . $e->getMessage());
         }
     }
@@ -933,7 +938,7 @@ class AdminReservationController extends Controller
             $demande->update([
                 'statut' => 'annulee',
                 'id_admin_confirmation' => Auth::id(),
-                'details_admin' => $request->notes_admin,
+                'notes_admin' => $request->notes_admin,
                 'date_confirmation' => now(),
             ]);
 
@@ -941,14 +946,18 @@ class AdminReservationController extends Controller
                 'details_refus' => $request->notes_admin,
             ]);
 
-            $message = "Votre demande de visite pour la chambre {$demande->chambre->numero_chambre} a été refusée. Raison : {$request->notes_admin}.";
-            // $this->notificationService->sendNotification(
-            //     $demande->client->user,
-            //     null, // Pas de réservation associée
-            //     'email',
-            //     'Demande de visite refusée',
-            //     $message
-            // );
+            $message = "Votre demande de visite pour l'appartement {$demande->chambre->typeChambre->nom} a malheureusement été refusée.";
+            if ($request->notes_admin) {
+                $message .= " Raison : " . $request->notes_admin;
+            }
+
+            $this->notificationService->sendNotification(
+                $demande->client->user,
+                null,
+                'visite',
+                'Demande de visite refusée',
+                $message
+            );
 
             DB::commit();
             return redirect()->route('admin.demandes-visite.index')
@@ -958,7 +967,6 @@ class AdminReservationController extends Controller
             Log::error('Erreur lors du refus de la visite', [
                 'demande_id' => $demande->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
             return back()->with('error', 'Erreur : ' . $e->getMessage());
         }

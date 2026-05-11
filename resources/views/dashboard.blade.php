@@ -105,6 +105,41 @@
         </div>
     </div>
 
+    <!-- Additional KPIs for Services & Vehicles -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Service Orders KPI -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-blue-200 transition-all duration-300">
+            <div class="flex items-center">
+                <div class="p-4 bg-blue-50 text-blue-600 rounded-2xl mr-4 group-hover:rotate-6 transition-transform">
+                    <i class="fa-solid fa-bell-concierge text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider">Commandes Services</h3>
+                    <p class="text-2xl font-bold text-slate-800">{{ $stats['commandes_services_en_attente'] }} <span class="text-sm font-medium text-slate-400">en attente</span></p>
+                </div>
+            </div>
+            <a href="{{ route('admin.services.orders') }}" class="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all">
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+
+        <!-- Vehicle Rentals KPI -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-indigo-200 transition-all duration-300">
+            <div class="flex items-center">
+                <div class="p-4 bg-indigo-50 text-indigo-600 rounded-2xl mr-4 group-hover:rotate-6 transition-transform">
+                    <i class="fa-solid fa-car text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider">Locations Actives</h3>
+                    <p class="text-2xl font-bold text-slate-800">{{ $stats['locations_vehicules_actives'] }} <span class="text-sm font-medium text-slate-400">en cours</span></p>
+                </div>
+            </div>
+            <a href="{{ route('admin.vehicules.rentals') }}" class="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
     <!-- Charts -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <!-- Main Chart -->

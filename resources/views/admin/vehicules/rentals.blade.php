@@ -113,12 +113,22 @@
 
                                     <div class="p-3 border-b border-gray-50">
                                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Paiement</p>
-                                        <select name="statut_paiement" class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
-                                            <option value="non_paye" {{ $rental->statut_paiement == 'non_paye' ? 'selected' : '' }}>Non payé</option>
-                                            <option value="partiel" {{ $rental->statut_paiement == 'partiel' ? 'selected' : '' }}>Partiel</option>
-                                            <option value="paye" {{ $rental->statut_paiement == 'paye' ? 'selected' : '' }}>Payé</option>
-                                            <option value="rembourse" {{ $rental->statut_paiement == 'rembourse' ? 'selected' : '' }}>Remboursé</option>
-                                        </select>
+                                        <div class="space-y-2">
+                                            <select name="statut_paiement" class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
+                                                <option value="non_paye" {{ $rental->statut_paiement == 'non_paye' ? 'selected' : '' }}>Non payé</option>
+                                                <option value="partiel" {{ $rental->statut_paiement == 'partiel' ? 'selected' : '' }}>Partiel</option>
+                                                <option value="paye" {{ $rental->statut_paiement == 'paye' ? 'selected' : '' }}>Payé</option>
+                                                <option value="rembourse" {{ $rental->statut_paiement == 'rembourse' ? 'selected' : '' }}>Remboursé</option>
+                                            </select>
+                                            
+                                            <select name="methode_paiement" class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
+                                                <option value="especes">Espèces</option>
+                                                <option value="virement">Virement</option>
+                                                <option value="mobile_money">Mobile Money</option>
+                                                <option value="carte_credit">Carte Crédit</option>
+                                                <option value="autre">Autre</option>
+                                            </select>
+                                        </div>
                                     </div>
 
                                     <div class="p-3 bg-gray-50/30">

@@ -5,9 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use App\Models\CommandeService;
 use Illuminate\Http\Request;
+use App\Services\NotificationService;
+use Illuminate\Support\Str;
+
 
 class AdminServiceController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Liste des services.
      */
@@ -103,13 +112,58 @@ class AdminServiceController extends Controller
     {
         $request->validate([
             'statut' => 'required|in:en_attente,confirmee,en_cours,terminee,annulee',
+            'statut_paiement' => 'required|in:non_paye,paye,rembourse',
+            'methode_paiement' => 'nullable|string',
             'notes_admin' => 'nullable|string'
         ]);
 
+        $oldStatutPaiement = $order->statut_paiement;
+
         $order->update([
             'statut' => $request->statut,
+            'statut_paiement' => $request->statut_paiement,
             'notes_admin' => $request->notes_admin
         ]);
+
+        // Créer un enregistrement de paiement si c'est marqué comme payé et que ça ne l'était pas
+        if ($request->statut_paiement === 'paye' && $oldStatutPaiement !== 'paye') {
+            \App\Models\Paiement::create([
+                'id_commande_service' => $order->id,
+                'id_reservation' => $order->id_reservation,
+                'montant' => $order->prix_total,
+                'date_paiement' => now(),
+                'methode_paiement' => $request->methode_paiement ?? 'especes',
+                'statut' => 'valide',
+                'id_admin_validation' => auth()->id(),
+                'notes' => "Encaissement manuel pour commande service #{$order->id}"
+            ]);
+
+            // Logger l'audit
+            \App\Models\AuditLog::create([
+                'id_utilisateur' => auth()->id(),
+                'action' => 'encaissement_service',
+                'description' => "Encaissement de {$order->prix_total} FCFA pour la commande #{$order->id}",
+                'ip_address' => request()->ip()
+            ]);
+        }
+
+        // Notification au client
+        try {
+            $message = "Le statut de votre commande de service #{$order->id} est désormais : " . ucfirst($request->statut) . ".";
+            if ($request->notes_admin) {
+                $message .= " Note de l'admin : " . $request->notes_admin;
+            }
+
+            $this->notificationService->sendNotification(
+                $order->client->user,
+                $order->reservation, // Peut être null si commande directe
+                'service',
+                'Mise à jour de votre commande de service',
+                $message
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Erreur notification service: " . $e->getMessage());
+        }
 
         return back()->with('success', 'Statut de la commande mis à jour.');
     }

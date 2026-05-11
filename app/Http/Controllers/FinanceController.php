@@ -16,6 +16,8 @@ use App\Exports\FinanceReportExport;
 use Stripe\Stripe;
 use Stripe\Refund;
 use App\Services\NotificationService;
+use App\Models\LocationVehicule;
+use App\Models\CommandeService;
 use Illuminate\Support\Facades\Auth;
 
 class FinanceController extends Controller
@@ -406,20 +408,239 @@ class FinanceController extends Controller
         return $appartementDisponibles > 0 ? ($joursOccupes / $appartementDisponibles) * 100 : 0;
     }
     /**
-     * Journalise les actions financières
+     * Affiche le formulaire d'encaissement unifié
      */
-    private function logAction($action, $model, array $details)
+    public function createEncaissement()
     {
+        // Récupérer les réservations avec un reste à payer
+        $reservations = Reservation::with('client.user')
+            ->whereIn('statut', ['en_attente_paiement', 'acompte_paye', 'confirmee'])
+            ->get()
+            ->filter(function($r) {
+                return ($r->prix_total - $r->acompte_paye) > 0;
+            });
+
+        // Récupérer les locations de véhicules non payées ou partielles
+        $locations = LocationVehicule::with(['client.user', 'vehicule'])
+            ->whereIn('statut_paiement', ['non_paye', 'partiel'])
+            ->get();
+
+        // Récupérer les commandes de services non payées ou partielles
+        $commandes = CommandeService::with(['client.user'])
+            ->whereIn('statut_paiement', ['non_paye', 'partiel'])
+            ->get();
+
+        return view('admin.finance.create-encaissement', compact('reservations', 'locations', 'commandes'));
+    }
+
+    /**
+     * Enregistre un encaissement pour n'importe quel type de service
+     */
+    public function storeEncaissement(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:reservation,location_vehicule,commande_service',
+            'item_id' => 'required',
+            'montant' => 'required|numeric|min:1',
+            'methode_paiement' => 'required|string|in:especes,virement,carte_credit,mobile_money,autre',
+            'reference_transaction' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
         try {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => $action,
-                'model_type' => get_class($model),
-                'model_id' => $model->id,
-                'details' => json_encode($details),
+            $paiementData = [
+                'montant' => $request->montant,
+                'date_paiement' => now(),
+                'methode_paiement' => $request->methode_paiement,
+                'reference_transaction' => $request->reference_transaction ?? 'MANUAL-' . strtoupper(uniqid()),
+                'statut' => 'valide',
+                'id_admin_validation' => Auth::id(),
+                'notes' => $request->notes,
+            ];
+
+            $model = null;
+            $clientUser = null;
+            $reference = "";
+
+            if ($request->type === 'reservation') {
+                $model = Reservation::findOrFail($request->item_id);
+                $paiementData['id_reservation'] = $model->id;
+                
+                $nouveauTotalPaye = $model->acompte_paye + $request->montant;
+                $nouveauStatut = ($nouveauTotalPaye >= $model->prix_total) ? 'confirmee' : $model->statut;
+                
+                $model->update([
+                    'acompte_paye' => $nouveauTotalPaye,
+                    'statut' => $nouveauStatut,
+                ]);
+                
+                $clientUser = $model->client->user;
+                $reference = $model->reference;
+
+            } elseif ($request->type === 'location_vehicule') {
+                $model = LocationVehicule::findOrFail($request->item_id);
+                $paiementData['id_location_vehicule'] = $model->id;
+                $paiementData['id_reservation'] = $model->id_reservation;
+
+                // Calculer le nouveau statut de paiement simplifié (pour l'instant full ou partiel)
+                // Idéalement on devrait suivre le total payé aussi dans location_vehicule
+                $nouveauStatutP = ($request->montant >= $model->prix_total) ? 'paye' : 'partiel';
+                
+                $model->update([
+                    'statut_paiement' => $nouveauStatutP,
+                ]);
+                
+                $clientUser = $model->client->user;
+                $reference = "Location #" . $model->id;
+
+            } elseif ($request->type === 'commande_service') {
+                $model = CommandeService::findOrFail($request->item_id);
+                $paiementData['id_commande_service'] = $model->id;
+                $paiementData['id_reservation'] = $model->id_reservation;
+
+                $nouveauStatutP = ($request->montant >= $model->prix_total) ? 'paye' : 'partiel';
+                
+                $model->update([
+                    'statut_paiement' => $nouveauStatutP,
+                ]);
+
+                $clientUser = $model->client->user;
+                $reference = "Commande #" . $model->id;
+            }
+
+            $paiement = Paiement::create($paiementData);
+
+            // Logger l'audit
+            $this->logAction('manual_unified_payment', $paiement, [
+                'type_origine' => $request->type,
+                'item_id' => $request->item_id,
+                'montant' => $request->montant,
+                'reference' => $reference
             ]);
+
+            // Notification
+            if ($clientUser) {
+                try {
+                    $this->notificationService->sendNotification(
+                        $clientUser,
+                        $model,
+                        'email',
+                        'Paiement reçu',
+                        "Nous confirmons la réception de votre paiement de " . number_format($request->montant, 0, ',', ' ') . " FCFA pour {$reference}."
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Notification non envoyée: ' . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('admin.finance.transactions')
+                ->with('success', 'Encaissement de ' . number_format($request->montant, 0, ',', ' ') . ' FCFA enregistré avec succès.');
+
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la journalisation : ' . $e->getMessage());
+            DB::rollback();
+            Log::error('Erreur lors de l\'encaissement unifié', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Erreur : ' . $e->getMessage())->withInput();
         }
+    }
+
+    /**
+     * Liste des paiements en attente de validation (Mobile Money, etc.)
+     */
+    public function pendingPayments()
+    {
+        $pendingPayments = Paiement::with(['reservation.client.user', 'locationVehicule.client.user', 'commandeService.client.user'])
+            ->where('statut', 'en_attente')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.finance.pending', compact('pendingPayments'));
+    }
+
+    /**
+     * Valider un paiement déclaré par un client
+     */
+    public function approvePayment(Request $request, Paiement $paiement)
+    {
+        DB::beginTransaction();
+        try {
+            $paiement->update([
+                'statut' => 'valide',
+                'id_admin_validation' => Auth::id(),
+                'notes' => ($paiement->notes ? $paiement->notes . " | " : "") . "Validé par " . Auth::user()->name
+            ]);
+
+            $model = null;
+            $clientUser = null;
+            $reference = "";
+
+            // Mettre à jour le modèle lié
+            if ($paiement->id_reservation && !$paiement->id_location_vehicule && !$paiement->id_commande_service) {
+                $model = Reservation::find($paiement->id_reservation);
+                if ($model) {
+                    $nouveauTotalPaye = $model->acompte_paye + $paiement->montant;
+                    $model->update([
+                        'acompte_paye' => $nouveauTotalPaye,
+                        'statut' => ($nouveauTotalPaye >= $model->prix_total) ? 'confirmee' : $model->statut
+                    ]);
+                    $clientUser = $model->client ? $model->client->user : null;
+                    $reference = $model->reference;
+                }
+            } elseif ($paiement->id_location_vehicule) {
+                $model = LocationVehicule::find($paiement->id_location_vehicule);
+                if ($model) {
+                    $model->update(['statut_paiement' => 'paye']); // Pour simplifier
+                    $clientUser = $model->client ? $model->client->user : null;
+                    $reference = "Location #" . $model->id;
+                }
+            } elseif ($paiement->id_commande_service) {
+                $model = CommandeService::find($paiement->id_commande_service);
+                if ($model) {
+                    $model->update(['statut_paiement' => 'paye']);
+                    $clientUser = $model->client ? $model->client->user : null;
+                    $reference = "Commande #" . $model->id;
+                }
+            }
+
+            // Notification
+            if ($clientUser) {
+                try {
+                    $this->notificationService->sendNotification(
+                        $clientUser,
+                        $model,
+                        'email',
+                        'Paiement validé',
+                        "Votre paiement de " . number_format($paiement->montant, 0, ',', ' ') . " FCFA pour {$reference} a été validé. Merci de votre confiance."
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Notification non envoyée: ' . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+            return back()->with('success', 'Paiement validé avec succès.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Erreur validation paiement', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Erreur : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Rejeter un paiement déclaré
+     */
+    public function rejectPayment(Request $request, Paiement $paiement)
+    {
+        $request->validate(['reason' => 'required|string|max:255']);
+
+        $paiement->update([
+            'statut' => 'rejete',
+            'id_admin_validation' => Auth::id(),
+            'notes' => ($paiement->notes ? $paiement->notes . " | " : "") . "REJETÉ: " . $request->reason
+        ]);
+
+        return back()->with('info', 'Paiement rejeté.');
     }
 }

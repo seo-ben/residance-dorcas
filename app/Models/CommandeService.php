@@ -17,7 +17,7 @@ class CommandeService extends Model
     protected $primaryKey = 'id';
     protected $fillable = [
         'id_reservation', 'id_client', 'date_commande', 'date_service_souhaitee',
-        'statut', 'notes_client', 'notes_admin'
+        'statut', 'statut_paiement', 'notes_client', 'notes_admin'
     ];
 
     protected $casts = [

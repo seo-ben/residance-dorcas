@@ -15,6 +15,8 @@ class Paiement extends Model
     protected $fillable = [
         'id_reservation',
         'id_demande_visite',
+        'id_location_vehicule',
+        'id_commande_service',
         'montant',
         'montant_rembourse',
         'date_paiement',
@@ -22,6 +24,7 @@ class Paiement extends Model
         'reference_transaction',
         'statut',
         'id_admin_validation',
+        'preuve_paiement',
         'notes'
     ];
 
@@ -39,8 +42,18 @@ class Paiement extends Model
         return $this->belongsTo(DemandeVisite::class, 'id_demande_visite');
     }
 
+    public function locationVehicule(): BelongsTo
+    {
+        return $this->belongsTo(LocationVehicule::class, 'id_location_vehicule');
+    }
+
+    public function commandeService(): BelongsTo
+    {
+        return $this->belongsTo(CommandeService::class, 'id_commande_service');
+    }
+
     public function administrateur(): BelongsTo
     {
-        return $this->belongsTo(Administrateur::class, 'id_admin_validation');
+        return $this->belongsTo(User::class, 'id_admin_validation');
     }
 }

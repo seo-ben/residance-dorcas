@@ -8,13 +8,26 @@ use App\Models\VehiculeImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Services\NotificationService;
 
 class AdminVehiculeController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     public function index()
     {
         $vehicules = Vehicule::with('primaryImage')->latest()->paginate(10);
         return view('admin.vehicules.index', compact('vehicules'));
+    }
+
+    public function show(Vehicule $vehicule)
+    {
+        $vehicule->load(['images', 'locations.client.user', 'locations.reservation']);
+        return view('admin.vehicules.show', compact('vehicule'));
     }
 
     public function create()
@@ -144,8 +157,11 @@ class AdminVehiculeController extends Controller
     {
         $request->validate([
             'statut' => 'required|in:en_attente,confirmee,en_cours,terminee,annulee',
-            'statut_paiement' => 'required|in:non_paye,partiel,paye,rembourse'
+            'statut_paiement' => 'required|in:non_paye,partiel,paye,rembourse',
+            'methode_paiement' => 'nullable|string'
         ]);
+
+        $oldStatutPaiement = $rental->statut_paiement;
 
         $rental->update([
             'statut' => $request->statut,
@@ -153,11 +169,51 @@ class AdminVehiculeController extends Controller
             'notes' => $request->notes
         ]);
 
+        // Créer un enregistrement de paiement si c'est marqué comme payé et que ça ne l'était pas
+        if ($request->statut_paiement === 'paye' && $oldStatutPaiement !== 'paye') {
+            \App\Models\Paiement::create([
+                'id_location_vehicule' => $rental->id,
+                'id_reservation' => $rental->id_reservation,
+                'montant' => $rental->prix_total,
+                'date_paiement' => now(),
+                'methode_paiement' => $request->methode_paiement ?? 'especes',
+                'statut' => 'valide',
+                'id_admin_validation' => auth()->id(),
+                'notes' => "Encaissement manuel pour location véhicule #{$rental->id}"
+            ]);
+
+            // Logger l'audit
+            \App\Models\AuditLog::create([
+                'id_utilisateur' => auth()->id(),
+                'action' => 'encaissement_vehicule',
+                'description' => "Encaissement de {$rental->prix_total} FCFA pour la location #{$rental->id}",
+                'ip_address' => request()->ip()
+            ]);
+        }
+
         // Si la location est confirmée ou en cours, on peut mettre à jour le statut du véhicule
         if (in_array($request->statut, ['confirmee', 'en_cours'])) {
             $rental->vehicule->update(['statut' => 'loue']);
         } elseif (in_array($request->statut, ['terminee', 'annulee'])) {
             $rental->vehicule->update(['statut' => 'disponible']);
+        }
+
+        // Notification au client
+        try {
+            $message = "Le statut de votre location de véhicule ({$rental->vehicule->marque} {$rental->vehicule->modele}) est désormais : " . ucfirst($request->statut) . ".";
+            if ($request->statut_paiement === 'paye') {
+                $message .= " Votre paiement a bien été confirmé.";
+            }
+
+            $this->notificationService->sendNotification(
+                $rental->client->user,
+                $rental->reservation,
+                'vehicule',
+                'Mise à jour de votre location',
+                $message
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Erreur notification véhicule: " . $e->getMessage());
         }
 
         return back()->with('success', 'Statut de la location mis à jour.');
