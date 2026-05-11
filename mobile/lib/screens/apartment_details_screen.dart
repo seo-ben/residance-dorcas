@@ -23,6 +23,33 @@ class ApartmentDetailsScreen extends StatefulWidget {
 }
 
 class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
+  late Chambre _currentApartment;
+  bool _isLoadingDetails = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentApartment = widget.apartment;
+    
+    // Si le prix est à 0 (cas de la recherche avec données minimales), on recharge les détails complets
+    if (_currentApartment.prix == 0) {
+      _loadFullDetails();
+    }
+  }
+
+  Future<void> _loadFullDetails() async {
+    setState(() => _isLoadingDetails = true);
+    final fullDetails = await context.read<ApartmentProvider>().getApartmentDetails(_currentApartment.id);
+    if (fullDetails != null && mounted) {
+      setState(() {
+        _currentApartment = fullDetails;
+        _isLoadingDetails = false;
+      });
+    } else if (mounted) {
+      setState(() => _isLoadingDetails = false);
+    }
+  }
+
   DateTimeRange? _selectedDateRange;
 
   void _selectDates() async {
@@ -58,6 +85,15 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
       body: CustomScrollView(
         slivers: [
           _buildAppBar(context),
+          if (_isLoadingDetails)
+            const SliverToBoxAdapter(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -98,7 +134,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
   }
 
   Widget _buildReviews() {
-    final avis = widget.apartment.avis;
+    final avis = _currentApartment.avis;
     if (avis.isEmpty) {
       return const Text(
         'Aucun avis pour le moment.',
@@ -166,7 +202,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => VisitRequestScreen(apartment: widget.apartment),
+              builder: (_) => VisitRequestScreen(apartment: _currentApartment),
             ),
           );
         },
@@ -230,9 +266,9 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
       expandedHeight: 300,
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
-        background: widget.apartment.image != null
+        background: _currentApartment.image != null
             ? CachedNetworkImage(
-                imageUrl: widget.apartment.image!,
+                imageUrl: _currentApartment.image!,
                 fit: BoxFit.cover,
               )
             : Container(
@@ -254,7 +290,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
             builder: (context, provider, child) {
               return IconButton(
                 icon: const Icon(Icons.favorite, color: Colors.red),
-                onPressed: () => provider.toggleFavorite(widget.apartment.id),
+                onPressed: () => provider.toggleFavorite(_currentApartment.id),
               );
             },
           ),
@@ -266,7 +302,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
             icon: const Icon(Icons.share, color: AppColors.textDark),
             onPressed: () {
               Share.share(
-                'Regardez cet appartement : ${widget.apartment.type} ${widget.apartment.numero} à ${widget.apartment.propriete ?? "Résidance Dorcas"}. Réservez maintenant sur Dorcas App!',
+                'Regardez cet appartement : ${_currentApartment.type} ${_currentApartment.numero} à ${_currentApartment.propriete ?? "Résidance Dorcas"}. Réservez maintenant sur Dorcas App!',
                 subject: 'Partage d\'appartement',
               );
             },
@@ -286,7 +322,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
           children: [
             Expanded(
               child: Text(
-                '${widget.apartment.type ?? 'Appartement'} ${widget.apartment.numero}',
+                '${_currentApartment.type ?? 'Appartement'} ${_currentApartment.numero}',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -301,7 +337,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
                 const Icon(Icons.star, color: Colors.amber, size: 20),
                 const SizedBox(width: 4),
                 Text(
-                  widget.apartment.note.toStringAsFixed(1),
+                  _currentApartment.note.toStringAsFixed(1),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -318,7 +354,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                widget.apartment.propriete ?? 'Résidance Dorcas, Togo',
+                _currentApartment.propriete ?? 'Résidance Dorcas, Togo',
                 style: const TextStyle(color: AppColors.textLight),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -373,11 +409,11 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
   }
 
   Widget _buildBottomAction(BuildContext context) {
-    double totalPrix = widget.apartment.prix;
+    double totalPrix = _currentApartment.prix;
     if (_selectedDateRange != null) {
       int days = _selectedDateRange!.duration.inDays;
       if (days == 0) days = 1;
-      totalPrix = widget.apartment.prix * days;
+      totalPrix = _currentApartment.prix * days;
     }
 
     return Container(
@@ -466,7 +502,7 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
     final reservationData = await context
         .read<BookingProvider>()
         .createReservation(
-          chambreId: widget.apartment.id,
+          chambreId: _currentApartment.id,
           dateArrivee: _selectedDateRange!.start,
           dateDepart: _selectedDateRange!.end,
         );

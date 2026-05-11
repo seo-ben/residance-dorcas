@@ -8,6 +8,7 @@ import 'vehicle_rental_list_screen.dart';
 import 'service_order_list_screen.dart';
 import 'login_screen.dart';
 import 'support_screen.dart';
+import 'notification_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -135,7 +136,7 @@ class ProfileScreen extends StatelessWidget {
                       icon: Icons.notifications_none_rounded,
                       title: 'Notifications',
                       subtitle: 'Alertes et messages personnels',
-                      onTap: () {},
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
                     ),
                     _buildProfileItem(
                       icon: Icons.help_outline_rounded,

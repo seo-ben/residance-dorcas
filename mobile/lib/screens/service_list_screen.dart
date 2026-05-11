@@ -4,6 +4,8 @@ import '../providers/service_provider.dart';
 import '../utils/theme.dart';
 
 import 'service_order_screen.dart';
+import 'notification_screen.dart';
+import '../widgets/global_search_delegate.dart';
 
 class ServiceListScreen extends StatefulWidget {
   final bool showAppBar;
@@ -33,8 +35,18 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
           letterSpacing: -0.5,
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.notifications_none_outlined), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.search), 
+            onPressed: () {
+              showSearch(context: context, delegate: GlobalSearchDelegate());
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications_none_outlined), 
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen()));
+            },
+          ),
           const SizedBox(width: 8),
         ],
       ),

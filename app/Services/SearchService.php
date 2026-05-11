@@ -138,8 +138,9 @@ class SearchService
                     'type' => 'appartement',
                     'id' => $item->id,
                     'title' => 'Chambre ' . $item->numero_chambre,
-                    'subtitle' => ($item->propriete?->nom ?? '') . ' - ' . ($item->typeChambre?->nom ?? ''),
+                    'subtitle' => ($item->propriete?->nom ?? '') . ' - ' . ($item->typeChambre?->nom ?? '') . ' - ' . number_format($item->prix_base, 0, ',', ' ') . ' FCFA',
                     'image' => $image,
+                    'price' => $item->prix_base,
                 ];
             });
         
@@ -162,6 +163,7 @@ class SearchService
                     'title' => $item->nom,
                     'subtitle' => number_format($item->prix, 0, ',', ' ') . ' FCFA',
                     'image' => $image,
+                    'price' => $item->prix,
                 ];
             });
 
@@ -184,6 +186,7 @@ class SearchService
                     'title' => $item->marque . ' ' . $item->modele,
                     'subtitle' => number_format($item->prix_journalier, 0, ',', ' ') . ' FCFA / jour',
                     'image' => $image,
+                    'price' => $item->prix_journalier,
                 ];
             });
 

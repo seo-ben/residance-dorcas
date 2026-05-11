@@ -10,6 +10,7 @@ import 'vehicle_list_screen.dart';
 import 'service_list_screen.dart';
 import 'visit_request_screen.dart';
 import 'support_screen.dart';
+import 'notification_screen.dart';
 import '../providers/auth_provider.dart';
 import '../providers/property_provider.dart';
 import '../widgets/state_widgets.dart';
@@ -382,9 +383,19 @@ class _HomeContentState extends State<HomeContent> {
                   ),
                 ),
                 const Spacer(),
-                _buildCircleAction(Icons.search, () {}),
+                _buildCircleAction(Icons.search, () {
+                  showSearch(
+                    context: context,
+                    delegate: GlobalSearchDelegate(),
+                  );
+                }),
                 const SizedBox(width: 10),
-                _buildCircleAction(Icons.notifications_none_outlined, () {}, hasNotification: true),
+                _buildCircleAction(Icons.notifications_none_outlined, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                  );
+                }, hasNotification: true),
               ],
             ),
           ),

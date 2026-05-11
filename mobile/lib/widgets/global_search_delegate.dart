@@ -4,9 +4,13 @@ import '../services/api_service.dart';
 import '../config/api_config.dart';
 import '../utils/theme.dart';
 import '../screens/apartment_details_screen.dart';
-import '../screens/service_list_screen.dart';
+import '../screens/vehicle_booking_screen.dart';
+import '../screens/service_order_screen.dart';
+import '../screens/apartment_list_screen.dart';
 import '../screens/vehicle_list_screen.dart';
 import '../models/chambre.dart';
+import '../models/vehicule.dart';
+import '../models/service_model.dart';
 
 class GlobalSearchDelegate extends SearchDelegate {
   final ApiService _apiService = ApiService();
@@ -73,22 +77,28 @@ class GlobalSearchDelegate extends SearchDelegate {
           itemBuilder: (context, index) {
             final item = results[index];
             return ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: item['image'] != null
-                    ? CachedNetworkImage(
-                        imageUrl: item['image'],
-                        width: 50,
-                        height: 50,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _buildPlaceholder(item['type']),
-                      )
-                    : _buildPlaceholder(item['type']),
-              ),
-              title: Text(item['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(item['subtitle']),
-              trailing: const Icon(Icons.chevron_right, size: 20),
+              leading: item['image'] != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(item['image'], width: 50, height: 50, fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => const Icon(Icons.image_not_supported),
+                      ),
+                    )
+                  : const Icon(Icons.search),
+              title: Text(item['title'] ?? ''),
+              subtitle: Text('${item['type']?.toString().toUpperCase()} • ${_getPrice(item).toStringAsFixed(0)} FCFA'),
+              trailing: (item['type'] == 'service' || item['type'] == 'vehicule') 
+                ? ElevatedButton(
+                    onPressed: () => _handleItemTap(context, item),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                    child: const Text('RÉSERVER'),
+                  )
+                : const Icon(Icons.arrow_forward_ios, size: 14),
               onTap: () => _handleItemTap(context, item),
             );
           },
@@ -121,6 +131,34 @@ class GlobalSearchDelegate extends SearchDelegate {
     );
   }
 
+  double _getPrice(dynamic item) {
+    if (item == null) return 0.0;
+    
+    // Check all possible field names
+    final possibleFields = ['price', 'prix', 'prix_base', 'prix_journalier', 'prix_par_nuit','prix_unitaire','prix_original'];
+    for (var field in possibleFields) {
+      if (item[field] != null) {
+        final val = item[field];
+        if (val is num) return val.toDouble();
+        return double.tryParse(val.toString()) ?? 0.0;
+      }
+    }
+    
+    // Fallback: extract from subtitle if it contains "FCFA" or "F"
+    final subtitle = item['subtitle']?.toString() ?? '';
+    if (subtitle.contains('FCFA') || subtitle.contains(' F')) {
+      // Extract the last number in the string which is usually the price
+      final matches = RegExp(r'(\d[\d\s]*)').allMatches(subtitle);
+      if (matches.isNotEmpty) {
+        final lastMatch = matches.last.group(0)!;
+        final clean = lastMatch.replaceAll(RegExp(r'\s'), '');
+        return double.tryParse(clean) ?? 0.0;
+      }
+    }
+    
+    return 0.0;
+  }
+
   void _handleItemTap(BuildContext context, dynamic item) {
     // Navigation selon le type
     switch (item['type']) {
@@ -129,7 +167,7 @@ class GlobalSearchDelegate extends SearchDelegate {
         final chambre = Chambre(
           id: item['id'],
           numero: item['title'],
-          prix: 0.0, // Sera mis à jour par le détail
+          prix: _getPrice(item),
           statut: '',
           image: item['image'],
         );
@@ -141,15 +179,31 @@ class GlobalSearchDelegate extends SearchDelegate {
         );
         break;
       case 'service':
+        final service = ServiceModel(
+          id: item['id'],
+          nom: item['title'] ?? 'Service',
+          prix: _getPrice(item),
+          statut: 'actif',
+        );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ServiceListScreen(showAppBar: true)),
+          MaterialPageRoute(builder: (_) => ServiceOrderScreen(service: service)),
         );
         break;
       case 'vehicule':
+        final title = item['title']?.toString() ?? 'Véhicule';
+        final parts = title.split(' ');
+        final vehicule = Vehicule(
+          id: item['id'],
+          marque: parts.isNotEmpty ? parts[0] : 'Véhicule',
+          modele: parts.length > 1 ? parts.skip(1).join(' ') : '',
+          prixJournalier: _getPrice(item),
+          statut: 'disponible',
+          image: item['image'],
+        );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const VehicleListScreen(showAppBar: true)),
+          MaterialPageRoute(builder: (_) => VehicleBookingScreen(vehicle: vehicule)),
         );
         break;
       default:
