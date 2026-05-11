@@ -51,14 +51,17 @@ class PaiementController extends Controller
             if ($request->type === 'reservation') {
                 $item = Reservation::findOrFail($request->item_id);
                 $paiementData['id_reservation'] = $item->id;
+                $item->update(['statut' => 'en_attente_validation']);
             } elseif ($request->type === 'location_vehicule') {
                 $item = LocationVehicule::findOrFail($request->item_id);
                 $paiementData['id_location_vehicule'] = $item->id;
                 $paiementData['id_reservation'] = $item->id_reservation;
+                $item->update(['statut' => 'en_attente_validation']);
             } elseif ($request->type === 'commande_service') {
                 $item = CommandeService::findOrFail($request->item_id);
                 $paiementData['id_commande_service'] = $item->id;
                 $paiementData['id_reservation'] = $item->id_reservation;
+                $item->update(['statut' => 'en_attente_validation']);
             }
 
             $paiement = Paiement::create($paiementData);

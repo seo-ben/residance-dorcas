@@ -93,14 +93,15 @@ class BookingProvider with ChangeNotifier {
       final response = await _apiService.get(
         "${ApiConfig.reservations}/$reservationId/paiement-link",
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && response.data['payment_url'] != null) {
         final url = Uri.parse(response.data['payment_url']);
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        }
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception(response.data['message'] ?? "Erreur lors de la récupération du lien de paiement");
       }
     } catch (e) {
       debugPrint("Payment launch error: $e");
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();

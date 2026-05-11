@@ -91,6 +91,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/paiements/{paiement}/approuver', [FinanceController::class, 'approvePayment'])->name('paiements.approve');
         Route::post('/paiements/{paiement}/rejeter', [FinanceController::class, 'rejectPayment'])->name('paiements.reject');
         Route::get('/transactions', [FinanceController::class, 'transactions'])->name('transactions');
+        Route::post('/{paiement}/refund', [FinanceController::class, 'refund'])->name('refund');
         Route::get('/export', [FinanceController::class, 'export'])->name('export');
         Route::get('/audit', [FinanceController::class, 'audit'])->name('audit');
     });
@@ -113,20 +114,24 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // Services
     Route::prefix('services')->name('services.')->group(function () {
+        // Commandes de services
+        Route::get('/commandes', [App\Http\Controllers\AdminServiceController::class, 'orders'])->name('orders');
+        Route::put('/commandes/{order}/status', [App\Http\Controllers\AdminServiceController::class, 'updateOrderStatus'])->name('update-order-status');
+
         Route::get('/', [App\Http\Controllers\AdminServiceController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\AdminServiceController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\AdminServiceController::class, 'store'])->name('store');
         Route::get('/{service}/edit', [App\Http\Controllers\AdminServiceController::class, 'edit'])->name('edit');
         Route::put('/{service}', [App\Http\Controllers\AdminServiceController::class, 'update'])->name('update');
         Route::delete('/{service}', [App\Http\Controllers\AdminServiceController::class, 'destroy'])->name('destroy');
-        
-        // Commandes de services
-        Route::get('/commandes', [App\Http\Controllers\AdminServiceController::class, 'orders'])->name('orders');
-        Route::put('/commandes/{order}/status', [App\Http\Controllers\AdminServiceController::class, 'updateOrderStatus'])->name('update-order-status');
     });
 
     // Véhicules
     Route::prefix('vehicules')->name('vehicules.')->group(function () {
+        // Locations de véhicules
+        Route::get('/locations', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'rentals'])->name('rentals');
+        Route::put('/locations/{rental}/status', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'updateRentalStatus'])->name('update-rental-status');
+
         Route::get('/', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'store'])->name('store');
@@ -136,10 +141,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::delete('/{vehicule}', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'destroy'])->name('destroy');
         Route::post('/{vehicule}/images/{image}/set-primary', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'setPrimaryImage'])->name('images.primary');
         Route::delete('/images/{image}', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'deleteImage'])->name('images.delete');
-
-        // Locations de véhicules
-        Route::get('/locations', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'rentals'])->name('rentals');
-        Route::put('/locations/{rental}/status', [App\Http\Controllers\Admin\AdminVehiculeController::class, 'updateRentalStatus'])->name('update-rental-status');
     });
 
     // Equipements

@@ -121,6 +121,10 @@ class _ReservationListScreenState extends State<ReservationListScreen> {
         color = Colors.orange;
         label = 'Attente Paiement';
         break;
+      case 'en_attente_validation':
+        color = Colors.blue;
+        label = 'Validation en cours';
+        break;
       case 'annulee':
         color = Colors.red;
         label = 'Annulée';

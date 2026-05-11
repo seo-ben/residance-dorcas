@@ -7,42 +7,90 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'payment_declaration_screen.dart';
 
-class ReservationDetailScreen extends StatelessWidget {
+class ReservationDetailScreen extends StatefulWidget {
   final ReservationModel reservation;
 
   const ReservationDetailScreen({super.key, required this.reservation});
 
   @override
+  State<ReservationDetailScreen> createState() => _ReservationDetailScreenState();
+}
+
+class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
+  bool _isPaying = false;
+  late ReservationModel _reservation;
+
+  @override
+  void initState() {
+    super.initState();
+    _reservation = widget.reservation;
+  }
+
+  Future<void> _handlePayment() async {
+    setState(() => _isPaying = true);
+    try {
+      await context.read<BookingProvider>().launchPayment(_reservation.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors du lancement du paiement: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPaying = false);
+    }
+  }
+
+  Future<void> _refreshData() async {
+    // On pourrait rajouter une méthode fetchSingleReservation dans le provider
+    await context.read<BookingProvider>().fetchReservations();
+    if (mounted) {
+      setState(() {
+        _reservation = context.read<BookingProvider>().reservations.firstWhere(
+          (r) => r.id == _reservation.id,
+          orElse: () => _reservation,
+        );
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Réservation #${reservation.reference}'),
+        title: Text('Réservation #${_reservation.reference}'),
         actions: [
-          if (reservation.statut == 'en_attente_paiement')
+          if (_reservation.statut == 'en_attente_paiement')
             TextButton(
-              onPressed: () => context.read<BookingProvider>().launchPayment(reservation.id),
-              child: const Text('PAYER', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              onPressed: _isPaying ? null : _handlePayment,
+              child: _isPaying 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('PAYER', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatusHeader(),
-            const SizedBox(height: 24),
-            _buildApartmentInfo(),
-            const SizedBox(height: 24),
-            _buildStayDetails(),
-            const SizedBox(height: 24),
-            _buildPriceBreakdown(),
-            const SizedBox(height: 40),
-            if (reservation.statut == 'en_attente_paiement')
-              _buildPaymentButton(context),
-            const SizedBox(height: 16),
-            _buildActionButtons(context),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatusHeader(),
+              const SizedBox(height: 24),
+              _buildApartmentInfo(),
+              const SizedBox(height: 24),
+              _buildStayDetails(),
+              const SizedBox(height: 24),
+              _buildPriceBreakdown(),
+              const SizedBox(height: 40),
+              if (_reservation.statut == 'en_attente_paiement')
+                _buildPaymentButton(context),
+              const SizedBox(height: 16),
+              _buildActionButtons(context),
+            ],
+          ),
         ),
       ),
     );
@@ -52,20 +100,20 @@ class ReservationDetailScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _getStatusColor(reservation.statut).withOpacity(0.1),
+        color: _getStatusColor(_reservation.statut).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getStatusColor(reservation.statut)),
+        border: Border.all(color: _getStatusColor(_reservation.statut)),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: _getStatusColor(reservation.statut)),
+          Icon(Icons.info_outline, color: _getStatusColor(_reservation.statut)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Statut: ${_getStatusLabel(reservation.statut)}',
+              'Statut: ${_getStatusLabel(_reservation.statut)}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: _getStatusColor(reservation.statut),
+                color: _getStatusColor(_reservation.statut),
               ),
             ),
           ),
@@ -75,7 +123,7 @@ class ReservationDetailScreen extends StatelessWidget {
   }
 
   Widget _buildApartmentInfo() {
-    final chambre = reservation.chambre;
+    final chambre = _reservation.chambre;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -117,15 +165,15 @@ class ReservationDetailScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
           ),
           child: Column(
             children: [
-              _detailRow(Icons.login, 'Arrivée', DateFormat('dd MMM yyyy').format(reservation.dateArrivee)),
+              _detailRow(Icons.login, 'Arrivée', DateFormat('dd MMM yyyy').format(_reservation.dateArrivee)),
               const Divider(height: 24),
-              _detailRow(Icons.logout, 'Départ', DateFormat('dd MMM yyyy').format(reservation.dateDepart)),
+              _detailRow(Icons.logout, 'Départ', DateFormat('dd MMM yyyy').format(_reservation.dateDepart)),
               const Divider(height: 24),
-              _detailRow(Icons.nights_stay, 'Durée', '${reservation.dateDepart.difference(reservation.dateArrivee).inDays} nuits'),
+              _detailRow(Icons.nights_stay, 'Durée', '${_reservation.dateDepart.difference(_reservation.dateArrivee).inDays} nuits'),
             ],
           ),
         ),
@@ -150,7 +198,7 @@ class ReservationDetailScreen extends StatelessWidget {
             children: [
               const Text('Montant Total', style: TextStyle(color: Colors.white, fontSize: 16)),
               Text(
-                '${reservation.montantTotal.toStringAsFixed(0)} FCFA',
+                '${_reservation.montantTotal.toStringAsFixed(0)} FCFA',
                 style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ],
@@ -167,13 +215,15 @@ class ReservationDetailScreen extends StatelessWidget {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () => context.read<BookingProvider>().launchPayment(reservation.id),
+            onPressed: _isPaying ? null : _handlePayment,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Payer en ligne', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            child: _isPaying 
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Payer en ligne', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
         ),
         const SizedBox(height: 16),
@@ -181,18 +231,20 @@ class ReservationDetailScreen extends StatelessWidget {
           width: double.infinity,
           height: 56,
           child: OutlinedButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => PaymentDeclarationScreen(
                     type: 'reservation',
-                    itemId: reservation.id,
-                    montant: reservation.montantTotal,
-                    reference: reservation.reference,
+                    itemId: _reservation.id,
+                    montant: _reservation.montantTotal,
+                    reference: _reservation.reference,
                   ),
                 ),
               );
+              // Rafraichir les données au retour
+              _refreshData();
             },
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.primary, width: 2),
@@ -254,6 +306,7 @@ class ReservationDetailScreen extends StatelessWidget {
     switch (statut) {
       case 'confirmee': return Colors.green;
       case 'en_attente_paiement': return Colors.orange;
+      case 'en_attente_validation': return Colors.blue;
       case 'annulee': return Colors.red;
       default: return Colors.grey;
     }
@@ -263,6 +316,7 @@ class ReservationDetailScreen extends StatelessWidget {
     switch (statut) {
       case 'confirmee': return 'Confirmée';
       case 'en_attente_paiement': return 'Attente Paiement';
+      case 'en_attente_validation': return 'Validation en cours';
       case 'annulee': return 'Annulée';
       default: return statut;
     }
