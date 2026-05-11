@@ -159,8 +159,8 @@ class VehiculeController extends Controller
         $client = $user->client;
 
         if (!$client) {
+            // Créer un profil client si inexistant
             $client = Client::create([
-                'id' => $user->id,
                 'id_utilisateur' => $user->id,
                 'points_fidelite' => 0
             ]);

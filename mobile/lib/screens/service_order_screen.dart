@@ -175,7 +175,7 @@ class _ServiceOrderScreenState extends State<ServiceOrderScreen> {
       widget.service.id,
       _quantity,
       DateFormat('yyyy-MM-dd').format(_selectedDate!),
-      '${_selectedTime!.hour}:${_selectedTime!.minute}',
+      '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
       _notesController.text,
     );
 

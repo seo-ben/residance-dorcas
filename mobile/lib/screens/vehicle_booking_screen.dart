@@ -192,6 +192,9 @@ class _VehicleBookingScreenState extends State<VehicleBookingScreen> {
 
     if (mounted) {
       if (success) {
+        // Rafraîchir la liste des locations
+        context.read<VehicleProvider>().fetchUserRentals();
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Demande de location envoyée !'), backgroundColor: Colors.green));
         Navigator.pop(context);
