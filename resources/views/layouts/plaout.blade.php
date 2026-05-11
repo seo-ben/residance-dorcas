@@ -17,7 +17,7 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])    
     <!-- Meta tags SEO -->
-    <title>{{ config('app.name', 'Résidence Dorcas') }} - Locations d'Appartements Meublés à Lomé</title>
+    <title>{{ config('app.name', 'Residence Dorcas') }} - Locations d'Appartements Meublés à Lomé</title>
     <meta name="description" content="Résidence Dorcas : Votre partenaire immobilier à Lomé. Locations d'appartements et studios meublés de haut standing, avec Wi-Fi, climatisation et sécurité 24h/24.">
     <meta name="keywords" content="Résidence Dorcas, location appartement Lomé, immobilier Togo, studio meublé Lomé, location courte durée, location longue durée Togo">
     <meta name="author" content="Résidence Dorcas">
