@@ -36,16 +36,9 @@ Route::prefix('client')->group(function () {
 
     // Public routes (or filtered)
     Route::get('/appartements', [ChambreController::class, 'index']);
-    Route::get('/appartements/{id}', [ChambreController::class, 'show']);
-    
     Route::get('/proprietes', [ProprieteController::class, 'index']);
-    Route::get('/proprietes/{id}', [ProprieteController::class, 'show']);
-    
     Route::get('/services', [ServiceController::class, 'index']);
-    Route::get('/services/{id}', [ServiceController::class, 'show']);
-    
     Route::get('/vehicules', [VehiculeController::class, 'index']);
-    Route::get('/vehicules/{id}', [VehiculeController::class, 'show']);
 
     // Global Search (Public)
     Route::get('/search/instant', [\App\Http\Controllers\Api\Client\GlobalSearchController::class, 'instant']);
@@ -62,7 +55,6 @@ Route::prefix('client')->group(function () {
         Route::post('/vehicules/louer', [VehiculeController::class, 'book']);
         
         Route::get('/visites/mes-visites', [VisiteController::class, 'index']);
-        Route::get('/visites/{id}', [VisiteController::class, 'show']);
         Route::post('/visites', [VisiteController::class, 'store']);
         
         // Favoris
@@ -74,7 +66,12 @@ Route::prefix('client')->group(function () {
         Route::get('/reservations/{id}', [ReservationController::class, 'show']);
         Route::post('/reservations/{id}/annuler', [ReservationController::class, 'cancel']);
         Route::get('/reservations/{id}/paiement-link', [ReservationController::class, 'getPaymentLink']);
-        
-        Route::post('/vehicules/louer', [VehiculeController::class, 'book']);
     });
+
+    // Public Show routes (placed at the end to avoid conflict with specific routes like /mes-commandes)
+    Route::get('/appartements/{id}', [ChambreController::class, 'show']);
+    Route::get('/proprietes/{id}', [ProprieteController::class, 'show']);
+    Route::get('/services/{id}', [ServiceController::class, 'show']);
+    Route::get('/vehicules/{id}', [VehiculeController::class, 'show']);
+    Route::get('/visites/{id}', [VisiteController::class, 'show']);
 });
