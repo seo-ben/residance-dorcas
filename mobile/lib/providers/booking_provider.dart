@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class BookingProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
-  
+
   List<ReservationModel> _reservations = [];
   bool _isLoading = false;
   String? _error;
@@ -22,10 +22,24 @@ class BookingProvider with ChangeNotifier {
 
     try {
       final response = await _apiService.get(ApiConfig.reservations);
+      debugPrint("----------------------------------------------------------");
+      debugPrint("DEBUG RESERVATIONS :");
+      debugPrint("URL: ${ApiConfig.baseUrl}${ApiConfig.reservations}");
+      debugPrint("Status Code: ${response.statusCode}");
+
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'];
-        _reservations = data.map((json) => ReservationModel.fromJson(json)).toList();
+        debugPrint("Nombre de réservations reçues: ${data.length}");
+        if (response.data['debug_search_info'] != null) {
+          debugPrint(
+            "Infos Debug Serveur: ${response.data['debug_search_info']}",
+          );
+        }
+        _reservations = data
+            .map((json) => ReservationModel.fromJson(json))
+            .toList();
       }
+      debugPrint("----------------------------------------------------------");
     } catch (e) {
       _error = "Erreur lors du chargement des réservations";
     } finally {
@@ -45,13 +59,16 @@ class BookingProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.post(ApiConfig.reservations, data: {
-        'chambre_id': chambreId,
-        'date_arrivee': dateArrivee.toIso8601String().split('T')[0],
-        'date_depart': dateDepart.toIso8601String().split('T')[0],
-        'notes': notes,
-        'save_draft': false,
-      });
+      final response = await _apiService.post(
+        ApiConfig.reservations,
+        data: {
+          'chambre_id': chambreId,
+          'date_arrivee': dateArrivee.toIso8601String().split('T')[0],
+          'date_depart': dateDepart.toIso8601String().split('T')[0],
+          'notes': notes,
+          'save_draft': false,
+        },
+      );
 
       if (response.statusCode == 200) {
         await fetchReservations();
@@ -71,9 +88,11 @@ class BookingProvider with ChangeNotifier {
   Future<void> launchPayment(int reservationId) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
-      final response = await _apiService.get("${ApiConfig.reservations}/$reservationId/paiement-link");
+      final response = await _apiService.get(
+        "${ApiConfig.reservations}/$reservationId/paiement-link",
+      );
       if (response.statusCode == 200) {
         final url = Uri.parse(response.data['payment_url']);
         if (await canLaunchUrl(url)) {

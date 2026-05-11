@@ -4,7 +4,7 @@ import '../config/api_config.dart';
 
 class VisitProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
-  
+
   bool _isLoading = false;
   String? _error;
 
@@ -19,10 +19,24 @@ class VisitProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.get("${ApiConfig.visites}/mes-visites");
+      final response = await _apiService.get(
+        "${ApiConfig.visites}/mes-visites",
+      );
+      debugPrint("----------------------------------------------------------");
+      debugPrint("DEBUG VISITES :");
+      debugPrint("URL: ${ApiConfig.baseUrl}${ApiConfig.visites}/mes-visites");
+      debugPrint("Status Code: ${response.statusCode}");
+
       if (response.statusCode == 200) {
         _visits = response.data['data'];
+        debugPrint("Nombre de visites reçues: ${_visits.length}");
+        if (response.data['debug_search_info'] != null) {
+          debugPrint(
+            "Infos Debug Serveur: ${response.data['debug_search_info']}",
+          );
+        }
       }
+      debugPrint("----------------------------------------------------------");
     } catch (e) {
       _error = "Erreur lors du chargement des visites";
     } finally {
@@ -44,12 +58,15 @@ class VisitProvider with ChangeNotifier {
     try {
       // Note: Le backend Laravel a déjà un VisiteController
       // On utilise le prefix /client/visites si on l'a configuré
-      final response = await _apiService.post(ApiConfig.visites, data: {
-        'id_chambre': chambreId,
-        'date_visite': dateVisite.toIso8601String().split('T')[0],
-        'heure_visite': heureVisite,
-        'notes': notes,
-      });
+      final response = await _apiService.post(
+        ApiConfig.visites,
+        data: {
+          'id_chambre': chambreId,
+          'date_visite': dateVisite.toIso8601String().split('T')[0],
+          'heure_visite': heureVisite,
+          'notes': notes,
+        },
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         _isLoading = false;

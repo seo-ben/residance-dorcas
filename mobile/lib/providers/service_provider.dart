@@ -23,9 +23,23 @@ class ServiceProvider with ChangeNotifier {
       final response = await _apiService.get(
         "${ApiConfig.services}/mes-commandes",
       );
+      debugPrint("----------------------------------------------------------");
+      debugPrint("DEBUG SERVICES :");
+      debugPrint(
+        "URL: ${ApiConfig.baseUrl}${ApiConfig.services}/mes-commandes",
+      );
+      debugPrint("Status Code: ${response.statusCode}");
+
       if (response.statusCode == 200) {
         _userOrders = response.data['data'];
+        debugPrint("Nombre de services reçus: ${_userOrders.length}");
+        if (response.data['debug_search_info'] != null) {
+          debugPrint(
+            "Infos Debug Serveur: ${response.data['debug_search_info']}",
+          );
+        }
       }
+      debugPrint("----------------------------------------------------------");
     } catch (e) {
       debugPrint("Error fetching user service orders: $e");
     } finally {
