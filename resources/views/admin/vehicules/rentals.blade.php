@@ -80,6 +80,7 @@
                             <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full 
                                 {{ $rental->statut == 'terminee' ? 'bg-green-100 text-green-800' : '' }}
                                 {{ $rental->statut == 'en_attente' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                {{ $rental->statut == 'en_attente_validation' ? 'bg-purple-100 text-purple-800' : '' }}
                                 {{ $rental->statut == 'confirmee' ? 'bg-blue-100 text-blue-800' : '' }}
                                 {{ $rental->statut == 'en_cours' ? 'bg-indigo-100 text-indigo-800' : '' }}
                                 {{ $rental->statut == 'annulee' ? 'bg-red-100 text-red-800' : '' }}
@@ -104,7 +105,8 @@
                                     <div class="p-3 border-b border-gray-50 bg-gray-50/50">
                                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Statut Location</p>
                                         <div class="grid grid-cols-2 gap-1">
-                                            <button type="submit" name="statut" value="confirmee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">Confirmer</button>
+                                            <button type="submit" name="statut" value="confirmee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-blue-600">Confirmer</button>
+                                            <button type="submit" name="statut" value="en_attente_validation" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-colors text-purple-600">Validation</button>
                                             <button type="submit" name="statut" value="en_cours" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors">En cours</button>
                                             <button type="submit" name="statut" value="terminee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors">Terminer</button>
                                             <button type="submit" name="statut" value="annulee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors text-red-500">Annuler</button>

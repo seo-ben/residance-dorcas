@@ -156,7 +156,7 @@ class AdminVehiculeController extends Controller
     public function updateRentalStatus(Request $request, \App\Models\LocationVehicule $rental)
     {
         $request->validate([
-            'statut' => 'required|in:en_attente,confirmee,en_cours,terminee,annulee',
+            'statut' => 'required|in:en_attente,en_attente_validation,confirmee,en_cours,terminee,annulee',
             'statut_paiement' => 'required|in:non_paye,partiel,paye,rembourse',
             'methode_paiement' => 'nullable|string'
         ]);
@@ -182,12 +182,17 @@ class AdminVehiculeController extends Controller
                 'notes' => "Encaissement manuel pour location véhicule #{$rental->id}"
             ]);
 
-            // Logger l'audit
+            // Logger l'audit (correction du nom de champ id_utilisateur -> user_id selon AuditLog model s'il suit le standard)
+            // Mais ici on va garder id_utilisateur s'il existe, sinon on corrige.
+            // On a vu dans FinanceController qu'il utilise user_id.
             \App\Models\AuditLog::create([
-                'id_utilisateur' => auth()->id(),
+                'user_id' => auth()->id(),
                 'action' => 'encaissement_vehicule',
-                'description' => "Encaissement de {$rental->prix_total} FCFA pour la location #{$rental->id}",
-                'ip_address' => request()->ip()
+                'details' => json_encode([
+                    'location_id' => $rental->id,
+                    'montant' => $rental->prix_total,
+                    'reference' => "Location #{$rental->id}"
+                ]),
             ]);
         }
 
@@ -197,6 +202,7 @@ class AdminVehiculeController extends Controller
         } elseif (in_array($request->statut, ['terminee', 'annulee'])) {
             $rental->vehicule->update(['statut' => 'disponible']);
         }
+
 
         // Notification au client
         try {

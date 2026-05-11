@@ -407,6 +407,22 @@ class FinanceController extends Controller
 
         return $appartementDisponibles > 0 ? ($joursOccupes / $appartementDisponibles) * 100 : 0;
     }
+
+    private function logAction($action, $model, array $details)
+    {
+        try {
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => $action,
+                'model_type' => get_class($model),
+                'model_id' => $model->id,
+                'details' => json_encode($details),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la journalisation : ' . $e->getMessage());
+        }
+    }
+
     /**
      * Affiche le formulaire d'encaissement unifié
      */
@@ -590,18 +606,25 @@ class FinanceController extends Controller
             } elseif ($paiement->id_location_vehicule) {
                 $model = LocationVehicule::find($paiement->id_location_vehicule);
                 if ($model) {
-                    $model->update(['statut_paiement' => 'paye']); // Pour simplifier
+                    $model->update([
+                        'statut_paiement' => 'paye',
+                        'statut' => ($model->statut === 'en_attente_validation' || $model->statut === 'en_attente') ? 'confirmee' : $model->statut
+                    ]);
                     $clientUser = $model->client ? $model->client->user : null;
                     $reference = "Location #" . $model->id;
                 }
             } elseif ($paiement->id_commande_service) {
                 $model = CommandeService::find($paiement->id_commande_service);
                 if ($model) {
-                    $model->update(['statut_paiement' => 'paye']);
+                    $model->update([
+                        'statut_paiement' => 'paye',
+                        'statut' => ($model->statut === 'en_attente_validation' || $model->statut === 'en_attente') ? 'confirmee' : $model->statut
+                    ]);
                     $clientUser = $model->client ? $model->client->user : null;
                     $reference = "Commande #" . $model->id;
                 }
             }
+
 
             // Notification
             if ($clientUser) {

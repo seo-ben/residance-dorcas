@@ -48,26 +48,34 @@ class LeekpayService
         ];
 
         try {
+            $endpoint = $this->apiUrl . '/transactions'; // Changé de /payments à /transactions car /payments retourne 404
+            
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->privateKey,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
-            ])->post($this->apiUrl . '/payments', $payload);
+            ])->post($endpoint, $payload);
 
-            if ($response->successful() && isset($response['url'])) {
+            if ($response->successful() && (isset($response['url']) || isset($response['payment_url']))) {
                 // Retourne l'URL de paiement générée par Leekpay
                 return [
                     'success' => true,
-                    'url' => $response['url'],   // Lien de redirection vers Leekpay Checkout
-                    'payment_id' => $response['id'] ?? null, 
+                    'url' => $response['url'] ?? $response['payment_url'],   // Lien de redirection vers Leekpay Checkout
+                    'payment_id' => $response['id'] ?? $response['transaction_id'] ?? null, 
                 ];
             }
 
-            Log::error('Erreur Leekpay API', ['response' => $response->json()]);
+            Log::error('Erreur Leekpay API', [
+                'endpoint' => $endpoint,
+                'status' => $response->status(),
+                'response' => $response->json()
+            ]);
+            
             return [
                 'success' => false,
-                'error' => 'Impossible de générer le lien de paiement Leekpay.'
+                'error' => 'Erreur Leekpay (' . $response->status() . ') : ' . ($response->json()['message'] ?? 'Impossible de générer le lien de paiement.')
             ];
+
 
         } catch (\Exception $e) {
             Log::error('Exception Leekpay', ['msg' => $e->getMessage()]);
