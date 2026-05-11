@@ -20,6 +20,24 @@ class DemandeVisite extends Model
         'message', 'statut', 'date_confirmation', 'id_admin_confirmation', 'notes_admin'
     ];
 
+    protected $casts = [
+        'date_demande' => 'datetime',
+        'date_visite_souhaitee' => 'datetime',
+        'date_confirmation' => 'datetime',
+    ];
+
+    protected $appends = ['date_visite_format', 'heure_visite_format'];
+
+    public function getDateVisiteFormatAttribute()
+    {
+        return $this->date_visite_souhaitee ? $this->date_visite_souhaitee->format('d/m/Y') : null;
+    }
+
+    public function getHeureVisiteFormatAttribute()
+    {
+        return $this->date_visite_souhaitee ? $this->date_visite_souhaitee->format('H:i') : null;
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'id_client');

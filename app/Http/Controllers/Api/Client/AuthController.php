@@ -84,7 +84,9 @@ class AuthController extends Controller
                     'type_utilisateur' => 'client',
                 ]);
 
+                // Créer le client avec le même ID que l'utilisateur pour plus de clarté
                 Client::create([
+                    'id' => $user->id,
                     'id_utilisateur' => $user->id,
                     'points_fidelite' => 0,
                 ]);
@@ -154,10 +156,10 @@ class AuthController extends Controller
                 'google_id' => $request->google_id,
                 'password' => Hash::make(Str::random(16)),
                 'type_utilisateur' => 'client',
-                'statut' => 'actif',
             ]);
 
             Client::create([
+                'id' => $user->id,
                 'id_utilisateur' => $user->id,
                 'points_fidelite' => 0,
             ]);

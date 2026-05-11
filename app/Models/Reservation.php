@@ -42,6 +42,13 @@ class Reservation extends Model
         'reduction_appliquee' => 'decimal:2'
     ];
 
+    protected $appends = ['prix_total_format'];
+
+    public function getPrixTotalFormatAttribute()
+    {
+        return number_format($this->prix_total, 0, ',', ' ') . ' FCFA';
+    }
+
     // Relations
     public function client(): BelongsTo
     {

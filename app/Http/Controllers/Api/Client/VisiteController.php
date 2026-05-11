@@ -105,6 +105,7 @@ class VisiteController extends Controller
 
         if (!$client) {
             $client = Client::create([
+                'id' => $user->id,
                 'id_utilisateur' => $user->id,
                 'points_fidelite' => 0
             ]);

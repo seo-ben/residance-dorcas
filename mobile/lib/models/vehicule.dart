@@ -22,7 +22,9 @@ class Vehicule {
       modele: json['modele'] ?? '',
       prixJournalier: double.tryParse(json['prix_journalier']?.toString() ?? '0') ?? 0.0,
       statut: json['statut'] ?? '',
-      image: json['primary_image']?['chemin_fichier'],
+      image: json['primary_image'] != null 
+          ? json['primary_image']['url_image'] ?? json['primary_image']['path']
+          : null,
     );
   }
 }

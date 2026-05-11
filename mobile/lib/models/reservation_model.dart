@@ -26,7 +26,7 @@ class ReservationModel {
       dateArrivee: DateTime.parse(json['date_arrivee']),
       dateDepart: DateTime.parse(json['date_depart']),
       statut: json['statut'] ?? '',
-      montantTotal: double.tryParse(json['montant_total']?.toString() ?? '0') ?? 0.0,
+      montantTotal: double.tryParse(json['prix_total']?.toString() ?? json['montant_total']?.toString() ?? '0') ?? 0.0,
       chambre: json['details'] != null && (json['details'] as List).isNotEmpty
           ? Chambre.fromJson(json['details'][0]['chambre'])
           : null,
