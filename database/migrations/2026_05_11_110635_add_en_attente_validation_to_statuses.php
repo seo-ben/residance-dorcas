@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            Schema::disableForeignKeyConstraints();
             Schema::table('reservations', function (Blueprint $table) {
                 $table->string('statut')->change();
             });
@@ -21,6 +22,7 @@ return new class extends Migration
             Schema::table('commandes_services', function (Blueprint $table) {
                 $table->string('statut')->change();
             });
+            Schema::enableForeignKeyConstraints();
         } else {
              // MySQL / MariaDB
              \Illuminate\Support\Facades\DB::statement("ALTER TABLE reservations MODIFY COLUMN statut ENUM('en_attente', 'confirmee', 'en_cours', 'brouillon', 'en_attente_paiement', 'acompte_paye', 'terminee', 'annulee', 'en_attente_validation') DEFAULT 'en_attente'");
@@ -28,6 +30,7 @@ return new class extends Migration
              \Illuminate\Support\Facades\DB::statement("ALTER TABLE commandes_services MODIFY COLUMN statut ENUM('en_attente', 'confirmee', 'en_cours', 'terminee', 'annulee', 'en_attente_validation') DEFAULT 'en_attente'");
         }
     }
+
 
     /**
      * Reverse the migrations.
