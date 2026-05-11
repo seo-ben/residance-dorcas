@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../models/reservation_model.dart';
 import '../services/api_service.dart';
@@ -14,6 +15,12 @@ class BookingProvider with ChangeNotifier {
   List<ReservationModel> get reservations => _reservations;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  
+  List<dynamic> _conflictReservations = [];
+  List<dynamic> get conflictReservations => _conflictReservations;
+  
+  List<dynamic> _suggestedPeriods = [];
+  List<dynamic> get suggestedPeriods => _suggestedPeriods;
 
   Future<void> fetchReservations() async {
     _isLoading = true;
@@ -76,8 +83,16 @@ class BookingProvider with ChangeNotifier {
         notifyListeners();
         return response.data['data'];
       }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) {
+        _conflictReservations = e.response?.data['conflicts'] ?? [];
+        _suggestedPeriods = e.response?.data['suggestions'] ?? [];
+        _error = e.response?.data['message'] ?? "L'appartement est déjà réservé.";
+      } else {
+        _error = "Impossible de créer la réservation. Veuillez réessayer.";
+      }
     } catch (e) {
-      _error = "Impossible de créer la réservation. Vérifiez la disponibilité.";
+      _error = "Une erreur inattendue est survenue.";
     }
 
     _isLoading = false;

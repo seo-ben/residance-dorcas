@@ -473,24 +473,122 @@ class _ApartmentDetailsScreenState extends State<ApartmentDetailsScreen> {
 
     if (mounted) {
       if (reservationData != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BookingSuccessScreen(
-              reservationId: reservationData['id'],
-              reference: reservationData['reference'],
+        // Success Modal
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 64),
+                const SizedBox(height: 16),
+                const Text(
+                  'Succès !',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Votre réservation ${reservationData['reference']} a été créée.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookingSuccessScreen(
+                            reservationId: reservationData['id'],
+                            reference: reservationData['reference'],
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Voir ma réservation'),
+                  ),
+                ),
+              ],
             ),
           ),
         );
       } else {
-        final error = context.read<BookingProvider>().error;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error ?? 'Une erreur est survenue'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showAvailabilityError();
       }
     }
+  }
+
+  void _showAvailabilityError() {
+    final provider = context.read<BookingProvider>();
+    final conflicts = provider.conflictReservations;
+    final suggestions = provider.suggestedPeriods;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Indisponible'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(provider.error ?? "Cet appartement est déjà occupé."),
+            if (conflicts.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text('Dates occupées :', style: TextStyle(fontWeight: FontWeight.bold)),
+              ...conflicts.map((c) => Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text('• Du ${c['debut']} au ${c['fin']}', style: const TextStyle(fontSize: 13)),
+              )),
+            ],
+            if (suggestions.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text('Suggestions de disponibilité :', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+              ...suggestions.map((s) => Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedDateRange = DateTimeRange(
+                        start: DateTime.parse(s['debut']),
+                        end: DateTime.parse(s['fin']),
+                      );
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text('• Du ${s['debut']} au ${s['fin']}', style: const TextStyle(fontSize: 13, color: Colors.green)),
+                  ),
+                ),
+              )),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
   }
 }

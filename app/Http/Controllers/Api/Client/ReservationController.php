@@ -107,9 +107,14 @@ class ReservationController extends Controller
 
         // Vérification disponibilité
         if (!$this->bookingService->checkAvailability($data['chambre_id'], $data['date_arrivee'], $data['date_depart'], $reservation ? $reservation->id : null)) {
+            $conflicts = $this->bookingService->getConflictingReservations($data['chambre_id'], $data['date_arrivee'], $data['date_depart'], $reservation ? $reservation->id : null);
+            $suggestions = $this->bookingService->getAvailablePeriods($data['chambre_id']);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'L\'appartement n\'est plus disponible pour ces dates.'
+                'message' => 'L\'appartement n\'est plus disponible pour ces dates.',
+                'conflicts' => $conflicts,
+                'suggestions' => collect($suggestions)->take(3) // On renvoie les 3 prochaines périodes
             ], 422);
         }
 

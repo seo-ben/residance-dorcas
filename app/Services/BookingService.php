@@ -89,21 +89,18 @@ class BookingService
     {
         $chambre = Chambre::findOrFail($chambreId);
 
-        // Vérifier les réservations existantes
+        // Vérifier les réservations existantes avec un statut actif
         $conflictualReservations = DetailReservation::whereHas('reservation', function ($query) use ($dateArrivee, $dateDepart, $excludeReservationId) {
-            $query->whereNotIn('statut', ['annulee', 'expiree']);
+            $query->whereIn('statut', ['confirmee', 'en_cours', 'terminee', 'acompte_paye', 'en_attente_paiement']);
             
             if ($excludeReservationId) {
                 $query->where('id', '!=', $excludeReservationId);
             }
 
+            // Standard overlap logic: (start1 < end2) AND (end1 > start2)
             $query->where(function ($q) use ($dateArrivee, $dateDepart) {
-                $q->whereBetween('date_arrivee', [$dateArrivee, $dateDepart])
-                    ->orWhereBetween('date_depart', [$dateArrivee, $dateDepart])
-                    ->orWhere(function ($innerQ) use ($dateArrivee, $dateDepart) {
-                        $innerQ->where('date_arrivee', '<=', $dateArrivee)
-                            ->where('date_depart', '>=', $dateDepart);
-                    });
+                $q->where('date_arrivee', '<', $dateDepart)
+                  ->where('date_depart', '>', $dateArrivee);
             });
         })->where('id_chambre', $chambreId)->exists();
 
@@ -114,15 +111,34 @@ class BookingService
         // Vérifier les périodes d'indisponibilité manuelles
         $isUnavailable = $chambre->periodesIndisponibilite()
             ->where(function ($query) use ($dateArrivee, $dateDepart) {
-                $query->whereBetween('date_debut', [$dateArrivee, $dateDepart])
-                    ->orWhereBetween('date_fin', [$dateArrivee, $dateDepart])
-                    ->orWhere(function ($q) use ($dateArrivee, $dateDepart) {
-                        $q->where('date_debut', '<=', $dateArrivee)
-                            ->where('date_fin', '>=', $dateDepart);
-                    });
+                $query->where('date_debut', '<', $dateDepart)
+                      ->where('date_fin', '>', $dateArrivee);
             })->exists();
 
         return !$isUnavailable;
+    }
+
+    /**
+     * Récupère les réservations qui bloquent une période donnée.
+     */
+    public function getConflictingReservations($chambreId, $dateArrivee, $dateDepart, $excludeReservationId = null)
+    {
+        return DetailReservation::whereHas('reservation', function ($query) use ($dateArrivee, $dateDepart, $excludeReservationId) {
+            $query->whereIn('statut', ['confirmee', 'en_cours', 'terminee', 'acompte_paye', 'en_attente_paiement']);
+            if ($excludeReservationId) {
+                $query->where('id', '!=', $excludeReservationId);
+            }
+            $query->where('date_arrivee', '<', $dateDepart)
+                  ->where('date_depart', '>', $dateArrivee);
+        })
+        ->where('id_chambre', $chambreId)
+        ->with(['reservation' => fn($q) => $q->select('id', 'reference', 'date_arrivee', 'date_depart')])
+        ->get()
+        ->map(fn($d) => [
+            'reference' => $d->reservation->reference,
+            'debut' => $d->reservation->date_arrivee->format('Y-m-d'),
+            'fin' => $d->reservation->date_depart->format('Y-m-d')
+        ]);
     }
 
     /**
