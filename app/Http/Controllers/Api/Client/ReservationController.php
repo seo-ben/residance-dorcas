@@ -113,14 +113,26 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        $data['statut'] = $request->input('save_draft', false) ? 'brouillon' : 'en_attente_paiement';
-        $reservation = $this->bookingService->saveReservation($data, $reservation);
+        try {
+            $data['statut'] = $request->input('save_draft', false) ? 'brouillon' : 'en_attente_paiement';
+            $reservation = $this->bookingService->saveReservation($data, $reservation);
 
-        return response()->json([
-            'success' => true,
-            'message' => $data['statut'] === 'brouillon' ? 'Brouillon enregistré.' : 'Réservation créée, en attente de paiement.',
-            'data' => $reservation->load(['details.chambre.typeChambre', 'details.chambre.propriete'])
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => $data['statut'] === 'brouillon' ? 'Brouillon enregistré.' : 'Réservation créée, en attente de paiement.',
+                'data' => $reservation->load(['details.chambre.typeChambre', 'details.chambre.propriete'])
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Erreur API create reservation: " . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'payload' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la création de la réservation : ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

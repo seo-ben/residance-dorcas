@@ -87,6 +87,7 @@ class BookingSuccessScreen extends StatelessWidget {
   Widget _buildPrimaryButton(BuildContext context) {
     return Consumer<BookingProvider>(
       builder: (context, provider, child) {
+        /*
         return SizedBox(
           width: double.infinity,
           height: 60,
@@ -114,7 +115,10 @@ class BookingSuccessScreen extends StatelessWidget {
             ),
           ),
         );
+        */
+        return const SizedBox.shrink();
       },
+
     );
   }
 

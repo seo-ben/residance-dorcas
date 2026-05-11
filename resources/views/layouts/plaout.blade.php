@@ -5,14 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.3/cdn.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.js" defer integrity="sha512-Qg4yHOPXaMOpvyQ8hk5ZVYUIXGE/0hxftn0lecaz04ohvI0ytM7AXpSzK1sfcYk79B1WexR3nG37Q/JboHLB2Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>    
     <!-- Meta tags SEO -->
     <title>{{ config('app.name', 'Résidence Dorcas') }} - Locations d'Appartements Meublés à Lomé</title>
     <meta name="description" content="Résidence Dorcas : Votre partenaire immobilier à Lomé. Locations d'appartements et studios meublés de haut standing, avec Wi-Fi, climatisation et sécurité 24h/24.">
@@ -51,7 +45,8 @@
     <meta name="msapplication-config" content="{{ asset('browserconfig.xml') }}">
     
 
-    <style>
+        [x-cloak] { display: none !important; }
+        
        /* Base Styles */
         html {
             scroll-behavior: smooth;

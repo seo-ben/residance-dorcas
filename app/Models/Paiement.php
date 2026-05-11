@@ -28,8 +28,10 @@ class Paiement extends Model
         'notes'
     ];
 
-    protected $dates = [
-        'date_paiement'
+    protected $casts = [
+        'date_paiement' => 'datetime',
+        'montant' => 'decimal:2',
+        'montant_rembourse' => 'decimal:2',
     ];
 
     public function reservation(): BelongsTo

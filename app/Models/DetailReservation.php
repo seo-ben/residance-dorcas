@@ -14,7 +14,7 @@ class DetailReservation extends Model
     use HasFactory;
     protected $table = 'details_reservation';
     protected $primaryKey = 'id';
-    protected $fillable = ['id_reservation', 'id_chambre', 'prix_unitaire', 'quantite', 'notes'];
+    protected $fillable = ['id_reservation', 'id_chambre', 'prix_unitaire', 'quantite', 'nb_nuits', 'total', 'notes'];
 
     public function reservation(): BelongsTo
     {

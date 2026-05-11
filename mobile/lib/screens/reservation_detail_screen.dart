@@ -60,6 +60,8 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
       appBar: AppBar(
         title: Text('Réservation #${_reservation.reference}'),
         actions: [
+          /* 
+          // Temporairement désactivé
           if (_reservation.statut == 'en_attente_paiement')
             TextButton(
               onPressed: _isPaying ? null : _handlePayment,
@@ -67,7 +69,9 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('PAYER', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
             ),
+          */
         ],
+
       ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
@@ -211,6 +215,7 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
   Widget _buildPaymentButton(BuildContext context) {
     return Column(
       children: [
+        /*
         SizedBox(
           width: double.infinity,
           height: 56,
@@ -227,6 +232,8 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
           ),
         ),
         const SizedBox(height: 16),
+        */
+
         SizedBox(
           width: double.infinity,
           height: 56,

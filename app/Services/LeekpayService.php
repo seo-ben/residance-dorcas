@@ -48,7 +48,7 @@ class LeekpayService
         ];
 
         try {
-            $endpoint = $this->apiUrl . '/transactions'; // Changé de /payments à /transactions car /payments retourne 404
+            $endpoint = $this->apiUrl . '/payments'; // Revert to /payments as /transactions returns 404 on production
             
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->privateKey,

@@ -214,17 +214,25 @@ class BookingService
         $reservation->notes_client = $data['notes'] ?? null;
         $reservation->statut = $data['statut'] ?? 'brouillon';
 
-        $reservation->save();
+        try {
+            $reservation->save();
 
-        // Gestion des détails (id_chambre)
-        $detail = $reservation->details()->firstOrNew(['id_reservation' => $reservation->id]);
-        $detail->fill([
-            'id_chambre' => $chambre->id,
-            'prix_unitaire' => $chambre->prix_base,
-            'nb_nuits' => $pricing['nb_jours'],
-            'total' => $pricing['prix_total']
-        ])->save();
+            // Gestion des détails (id_chambre)
+            $detail = $reservation->details()->firstOrNew(['id_reservation' => $reservation->id]);
+            $detail->fill([
+                'id_chambre' => $chambre->id,
+                'prix_unitaire' => $chambre->prix_base,
+                'quantite' => $pricing['nb_jours'] ?? 1,
+                'notes' => $data['notes'] ?? null
+            ])->save();
 
-        return $reservation;
+            return $reservation;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Erreur saveReservation: " . $e->getMessage(), [
+                'data' => $data,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 }

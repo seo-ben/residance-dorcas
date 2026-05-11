@@ -88,58 +88,61 @@
                                 {{ ucfirst(str_replace('_', ' ', $rental->statut)) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="text-primary-600 hover:text-primary-900 font-bold flex items-center justify-end w-full">
-                                Gérer
-                                <i class="fas fa-chevron-down ml-2 text-[10px]"></i>
-                            </button>
-                            
-                            <div x-show="open" @click.away="open = false" 
-                                x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="transform opacity-0 scale-95"
-                                x-transition:enter-end="transform opacity-100 scale-100"
-                                class="absolute right-0 mt-2 w-64 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 overflow-hidden text-left border border-gray-100">
-                                <form action="{{ route('admin.vehicules.update-rental-status', $rental) }}" method="POST">
-                                    @csrf
-                                    @method('PUT')
-                                    <div class="p-3 border-b border-gray-50 bg-gray-50/50">
-                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Statut Location</p>
-                                        <div class="grid grid-cols-2 gap-1">
-                                            <button type="submit" name="statut" value="confirmee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-blue-600">Confirmer</button>
-                                            <button type="submit" name="statut" value="en_attente_validation" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-colors text-purple-600">Validation</button>
-                                            <button type="submit" name="statut" value="en_cours" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors">En cours</button>
-                                            <button type="submit" name="statut" value="terminee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors">Terminer</button>
-                                            <button type="submit" name="statut" value="annulee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors text-red-500">Annuler</button>
+                        <td class="px-6 py-4 text-right text-sm font-medium">
+                            <div class="relative inline-block text-left" x-data="{ open: false }">
+                                <button @click="open = !open" class="text-primary-600 hover:text-primary-900 font-bold flex items-center justify-end">
+                                    Gérer
+                                    <i class="fas fa-chevron-down ml-2 text-[10px]"></i>
+                                </button>
+                                
+                                <div x-show="open" @click.away="open = false" 
+                                    x-cloak
+                                    x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                    class="absolute right-0 mt-2 w-64 rounded-2xl shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-[100] overflow-hidden text-left border border-gray-100">
+                                    <form action="{{ route('admin.vehicules.update-rental-status', $rental) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="p-3 border-b border-gray-50 bg-gray-50/50">
+                                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Statut Location</p>
+                                            <div class="grid grid-cols-2 gap-1">
+                                                <button type="submit" name="statut" value="confirmee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors text-blue-600">Confirmer</button>
+                                                <button type="submit" name="statut" value="en_attente_validation" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-colors text-purple-600">Validation</button>
+                                                <button type="submit" name="statut" value="en_cours" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors">En cours</button>
+                                                <button type="submit" name="statut" value="terminee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors">Terminer</button>
+                                                <button type="submit" name="statut" value="annulee" class="px-2 py-1.5 text-left text-[11px] font-bold hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors text-red-500">Annuler</button>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div class="p-3 border-b border-gray-50">
-                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Paiement</p>
-                                        <div class="space-y-2">
-                                            <select name="statut_paiement" class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
-                                                <option value="non_paye" {{ $rental->statut_paiement == 'non_paye' ? 'selected' : '' }}>Non payé</option>
-                                                <option value="partiel" {{ $rental->statut_paiement == 'partiel' ? 'selected' : '' }}>Partiel</option>
-                                                <option value="paye" {{ $rental->statut_paiement == 'paye' ? 'selected' : '' }}>Payé</option>
-                                                <option value="rembourse" {{ $rental->statut_paiement == 'rembourse' ? 'selected' : '' }}>Remboursé</option>
-                                            </select>
-                                            
-                                            <select name="methode_paiement" class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
-                                                <option value="especes">Espèces</option>
-                                                <option value="virement">Virement</option>
-                                                <option value="mobile_money">Mobile Money</option>
-                                                <option value="carte_credit">Carte Crédit</option>
-                                                <option value="autre">Autre</option>
-                                            </select>
+                                        <div class="p-3 border-b border-gray-50">
+                                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Paiement</p>
+                                            <div class="space-y-2">
+                                                <select name="statut_paiement" class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
+                                                    <option value="non_paye" {{ $rental->statut_paiement == 'non_paye' ? 'selected' : '' }}>Non payé</option>
+                                                    <option value="partiel" {{ $rental->statut_paiement == 'partiel' ? 'selected' : '' }}>Partiel</option>
+                                                    <option value="paye" {{ $rental->statut_paiement == 'paye' ? 'selected' : '' }}>Payé</option>
+                                                    <option value="rembourse" {{ $rental->statut_paiement == 'rembourse' ? 'selected' : '' }}>Remboursé</option>
+                                                </select>
+                                                
+                                                <select name="methode_paiement" class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500">
+                                                    <option value="especes">Espèces</option>
+                                                    <option value="virement">Virement</option>
+                                                    <option value="mobile_money">Mobile Money</option>
+                                                    <option value="carte_credit">Carte Crédit</option>
+                                                    <option value="autre">Autre</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div class="p-3 bg-gray-50/30">
-                                        <textarea name="notes" placeholder="Note interne..." class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500 min-h-[60px]">{{ $rental->notes }}</textarea>
-                                        <button type="submit" class="mt-2 w-full bg-primary-600 text-white text-[11px] font-bold py-2 rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100">
-                                            Mettre à jour
-                                        </button>
-                                    </div>
-                                </form>
+                                        <div class="p-3 bg-gray-50/30">
+                                            <textarea name="notes" placeholder="Note interne..." class="w-full text-xs p-2 rounded-xl border-gray-200 focus:ring-primary-500 focus:border-primary-500 min-h-[60px]">{{ $rental->notes }}</textarea>
+                                            <button type="submit" class="mt-2 w-full bg-primary-600 text-white text-[11px] font-bold py-2 rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100">
+                                                Mettre à jour
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     </tr>
